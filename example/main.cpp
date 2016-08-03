@@ -18,12 +18,12 @@ static bool read_memory( const uint32_t& address, void* buffer, const size_t& si
 }
 
 /// Offsets ;--) check out: https://github.com/frk1/hazedumper
-static constexpr uint32_t OFFSET_ENTITYLIST = 0x4A4FCA4;
-static constexpr uint32_t OFFSET_GLOWOBJECT = 0x4F6589C;
-static constexpr uint32_t OFFSET_CLIENTSTATE = 0x5B82B4;
-static constexpr uint32_t OFFSET_GAMEDIRECTORY = 0x656BA0;
+static constexpr uint32_t OFFSET_ENTITYLIST         = 0x4A4FCA4;
+static constexpr uint32_t OFFSET_GLOWOBJECT         = 0x4F6589C;
+static constexpr uint32_t OFFSET_CLIENTSTATE        = 0x5B82B4;
+static constexpr uint32_t OFFSET_GAMEDIRECTORY      = 0x656BA0;
 static constexpr uint32_t OFFSET_CLIENTSTATE_MAPDIR = 0x180;
-static constexpr uint32_t OFFSET_CLIENTSTATE_MAP = 0x284;
+static constexpr uint32_t OFFSET_CLIENTSTATE_MAP    = 0x284;
 
 namespace Valve {
 
@@ -235,7 +235,7 @@ namespace Valve {
 }
 
 std::unique_ptr< Valve::CClientState > g_pClientState = std::make_unique< Valve::CClientState >();
-std::unique_ptr< Valve::BSPParser >    g_pBSPParser = std::make_unique< Valve::BSPParser >();
+std::unique_ptr< Valve::BSPParser >    g_pBSPParser   = std::make_unique< Valve::BSPParser >();
 
 int32_t main( int32_t argc, char** argv )
 {
@@ -349,7 +349,7 @@ int32_t main( int32_t argc, char** argv )
         }
 
         const auto local_team = pLocalEntity->get_team();
-        const auto local_pos = pLocalEntity->get_eye_position();
+        const auto local_pos  = pLocalEntity->get_eye_position();
         for( size_t i = 0; i < ppBaseEntities.size(); ++i ) {
             auto& pBaseEntity = ppBaseEntities.at( i );
             if( !pBaseEntity->update( i + 1 ) ) {
