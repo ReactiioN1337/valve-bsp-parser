@@ -271,12 +271,12 @@ int32_t main( int32_t argc, char** argv )
         uint32_t module_base = 0;
         MODULEENTRY32 module_entry = { sizeof( MODULEENTRY32 ) };
         if( !!Module32First( snapshot, &module_entry ) ) {
-#ifdef _UNICODE
+#ifdef UNICODE
             auto nameW = to_wstring( module_name );
 #endif
             auto success = false;
             do {
-#ifdef _UNICODE
+#ifdef UNICODE
                 success = !nameW.compare( module_entry.szModule );
 #else
                 success = !name.compare( modEntry.szModule );
