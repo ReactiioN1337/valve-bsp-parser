@@ -8,4 +8,4 @@ Valve BSP-file parser, written in modern C++. This parser does only parse the ba
   - Should also work under UNIX with g++ or clang
 
 ## Usage
-Clone the repo using `git clone https://github.com/ReactiioN1337/valve-bsp-parser.git` into your project folder or download the zip archive and extract the files into your project folder. You need only to include the `BSPParser.hpp` header file. Example is given in `examples/main.cpp`.
+Clone the repo using `git clone https://github.com/ReactiioN1337/valve-bsp-parser.git` into your project folder or download the zip archive and extract the files into your project folder. You need only to include the `BSPParser.hpp` header file. Example is given in `example/main.cpp`.
