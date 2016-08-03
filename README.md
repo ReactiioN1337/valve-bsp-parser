@@ -3,7 +3,7 @@ ___
 Valve BSP-file parser, written in modern C++. This parser does only parse the basic BSP tree and doesn't include a VPK-reader or MDL-parser. Feel free to contribute :)
 
 ### Requirements
-- C++14(or above) compiler
+- C++ compiler which allows the C++14(or newer) std.
   - Microsoft Visual Studio 2015
   - Should also work under UNIX with g++ or clang
 
