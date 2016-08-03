@@ -44,7 +44,7 @@ void TraceRay::ray_cast_node( BSPFile* pBSPFile, const int32_t node_index, const
         auto* pLeaf = &pBSPFile->m_Leaves.at( static_cast< size_t >( -node_index - 1 ) );
         for( auto i = 0; i < static_cast< int32_t >( pLeaf->m_Numleafbrushes ); ++i ) {
             
-            auto iBrushIndex = int( pBSPFile->m_Leafbrushes.at( pLeaf->m_Firstleafbrush + i ) );
+            auto iBrushIndex = static_cast< int32_t >( pBSPFile->m_Leafbrushes.at( pLeaf->m_Firstleafbrush + i ) );
             auto* pBrush = &pBSPFile->m_Brushes.at( iBrushIndex );
             if( !pBrush ) {
                 continue;
