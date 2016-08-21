@@ -18,10 +18,10 @@ static bool read_memory( const uint32_t& address, void* buffer, const size_t& si
 }
 
 /// Offsets ;--) check out: https://github.com/frk1/hazedumper
-static constexpr uint32_t OFFSET_ENTITYLIST         = 0x4A50D24;
-static constexpr uint32_t OFFSET_GLOWOBJECT         = 0x4F6691C;
-static constexpr uint32_t OFFSET_CLIENTSTATE        = 0x5B82C4;
-static constexpr uint32_t OFFSET_GAMEDIRECTORY      = 0x656718;
+static constexpr uint32_t OFFSET_ENTITYLIST         = 0x4A57EA4;
+static constexpr uint32_t OFFSET_GLOWOBJECT         = 0x4F6DAD4;
+static constexpr uint32_t OFFSET_CLIENTSTATE        = 0x5BB2C4;
+static constexpr uint32_t OFFSET_GAMEDIRECTORY      = 0x659718;
 static constexpr uint32_t OFFSET_CLIENTSTATE_MAPDIR = 0x180;
 static constexpr uint32_t OFFSET_CLIENTSTATE_MAP    = 0x284;
 
