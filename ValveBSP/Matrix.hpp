@@ -2,20 +2,16 @@
  * @author     frk, ReactiioN
  * @date       08.03.2016
  * @visit      https://github.com/frk1
- *             https://thefrk.xyz
+ *             https://thefrk.pw
  *             https://www.unknowncheats.me/forum/members/1067779.html
  *
- *             https://github.com/ReactiioN1337 
- *             https://reactiion.pw 
+ *             https://github.com/ReactiioN1337
+ *             https://reactiion.pw
  *             https://www.unknowncheats.me/forum/members/264622.html
  */
 #ifndef MATRIX_HPP
 #define MATRIX_HPP
 #pragma once
-
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
 
 #include <array>
 #include <string>
@@ -314,7 +310,7 @@ public:
 
         T buf = static_cast<T>( 0 );
 
-        for( size_t i = 0; i < std::min( size(), other.size() ); ++i )
+        for( size_t i = 0; i < (std::min)( size(), other.size() ); ++i )
             buf += at( i ) * other.at( i );
 
         return buf;
