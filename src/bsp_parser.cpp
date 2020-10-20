@@ -5,9 +5,14 @@
 ///--------------------------------------------------------------------------------
 #include <valve-bsp-parser/bsp_parser.hpp>
 #include <filesystem>
+#include <cstring>
+#include <cfloat>
 
 using namespace rn;
 
+
+//TODO: handle compressed lumps, and standalone lump files
+//TODO: Lump 0 parser
 bsp_parser::bsp_parser(
     bsp_parser&& rhs
 ) noexcept

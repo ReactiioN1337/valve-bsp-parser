@@ -183,6 +183,15 @@ public:
     type_four_cc four_cc{};    // 0xC
 };//Size=0x10
 
+struct lumpfileheader_t
+{
+    std::int32_t lumpOffset;   // offset in the file where the lump data begins (should be 0x14)
+    std::int32_t lumpID;       // the lump ID according to the lump table
+    std::int32_t lumpVersion;  // same as "version" in lump_t	
+    std::int32_t lumpLength;   // same as "filelen" in lump_t
+    std::int32_t mapRevision;  // same as in dheader_t
+}; //Size=0x14
+
 class dheader_t
 {
     using type_lumps = std::array<lump_t, HEADER_LUMPS>;
@@ -375,7 +384,7 @@ public:
         return *this;
     }
 
-    _NODISCARD
+    NODISCARD
     float dist(
         const vector3& destination
     ) const

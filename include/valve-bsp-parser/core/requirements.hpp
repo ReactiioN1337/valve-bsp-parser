@@ -17,3 +17,14 @@
 #include <fstream>
 #include <string>
 #include <vector>
+
+
+// check for nodiscard
+
+#if __cplusplus >= 201703L
+    #define NODISCARD [[nodiscard]]
+#elif defined(_MSC_VER)
+    #define NODISCARD _NODISCARD
+#else
+    #define NODISCARD [[nodiscard]]
+#endif

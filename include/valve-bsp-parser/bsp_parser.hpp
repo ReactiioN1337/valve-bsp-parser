@@ -81,7 +81,7 @@ private:
     )const;
 
     template<typename type>
-    _NODISCARD
+    NODISCARD
     bool parse_lump(
         std::ifstream&          file,
         const valve::lump_index lump_index,
