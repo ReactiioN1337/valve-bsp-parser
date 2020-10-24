@@ -20,7 +20,7 @@ project ("valve-bsp-parser")
 #TODO: LZMA compression of lumps
 #TODO: entity lump
 #TODO: Overwrite in-mem bsp file with standalone lump files present in same directory as map
-#Research from leak: This functionality is "temporarily" disabled from the multiplayer games, due to possibility of exploits. sv_pure cannot detect such patches.
+#Research from leak: This functionality is "temporarily" disabled from the multiplayer games, due to possibility of exploits. sv_pure cannot detect such patches. The comment cites a wallhack as an example.
 # Dodaj źródło do pliku wykonywalnego tego projektu.
 set (PRIVATE_INCLUDES
     "include/valve-bsp-parser/bsp_parser.hpp"

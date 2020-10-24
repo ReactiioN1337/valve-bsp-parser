@@ -183,14 +183,34 @@ public:
     type_four_cc four_cc{};    // 0xC
 };//Size=0x10
 
-struct lumpfileheader_t
+class lumpfileheader_t
 {
-    std::int32_t lumpOffset;   // offset in the file where the lump data begins (should be 0x14)
-    std::int32_t lumpID;       // the lump ID according to the lump table
-    std::int32_t lumpVersion;  // same as "version" in lump_t	
-    std::int32_t lumpLength;   // same as "filelen" in lump_t
-    std::int32_t mapRevision;  // same as in dheader_t
+public:
+    std::int32_t lumpOffset = 0;   // offset in the file where the lump data begins (should be 0x14)
+    std::int32_t lumpID = 0;       // the lump ID according to the lump table
+    std::int32_t lumpVersion = 0;  // same as "version" in lump_t	
+    std::int32_t lumpLength = 0;   // same as "filelen" in lump_t
+    std::int32_t mapRevision = 0;  // same as in dheader_t
 }; //Size=0x14
+
+
+constexpr bool has_valid_lzma_ident(
+    const std::int32_t ident
+)
+{
+    return ident >= ('A' << 24) + ('M' << 16) + ('Z' << 8) + 'L';
+}
+#pragma pack(1)
+class lzma_header_t
+{
+    using type_lzma_prop = std::array<char, 5>;
+public:
+    std::int32_t	id;
+    std::int32_t	actualSize;		// always little endian
+    std::int32_t	lzmaSize;		// always little endian
+    type_lzma_prop	properties;
+};
+#pragma pack()
 
 class dheader_t
 {

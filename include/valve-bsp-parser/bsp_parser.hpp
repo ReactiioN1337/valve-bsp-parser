@@ -53,6 +53,10 @@ private:
 
     bool parse_leafbrushes(
         std::ifstream& file
+    ); 
+    
+    bool parse_entities(
+        std::ifstream& file
     );
 
     bool parse_polygons();
@@ -92,15 +96,23 @@ private:
         if( index >= _bsp_header.lumps.size() ) {
             return false;
         }
+        //TODO: decompress lump here if compressed
+        //Default behavior is casting data to underlying types.
+        //It doesn't handle compression
+        
+
+        //There are two exceptions though: Game lumps (35) (yes, multiple; compressed individually), and PAK Lump (40) (basically a zip file)
+
 
         const auto& lump = _bsp_header.lumps.at( index );
         const auto size  = static_cast<std::size_t>( lump.file_size ) / sizeof( type );
 
         out.resize( size );
 
+        
         file.seekg( lump.file_offset );
         file.read( reinterpret_cast<char*>( out.data() ), size * static_cast<std::size_t>( sizeof( type ) ) );
-
+        
         return true;
     }
 
