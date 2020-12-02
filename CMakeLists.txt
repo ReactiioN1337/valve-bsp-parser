@@ -32,9 +32,14 @@ set (SOURCES
 "src/bsp_parser.cpp")
 
 add_library(valve-bsp-parser STATIC  ${PRIVATE_INCLUDES} ${SOURCES})
+
+
+add_subdirectory(thirdparty/liblzma)
+add_dependencies(valve-bsp-parser lzma)
 target_include_directories(valve-bsp-parser PUBLIC
     ${Boost_INCLUDE_DIR}
     "${PROJECT_SOURCE_DIR}/include/"
+    "${PROJECT_SOURCE_DIR}/thirdparty/liblzma/include"
     )
     
 # /MT in MSVC compiler. Do check if we can use shared-mutex in gcc and clang

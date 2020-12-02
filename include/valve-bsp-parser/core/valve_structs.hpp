@@ -273,6 +273,22 @@ public:
     std::int16_t  leaf_water_data_id; // 0x2E
 };//Size=0x30
 
+struct dgamelump_t
+{
+    std::int32_t		id;		// gamelump ID
+    std::uint16_t	flags;		// flags
+    std::uint16_t	version;	// gamelump version
+    std::int32_t		fileofs;	// offset to this gamelump
+    std::int32_t		filelen;	// length
+};
+
+
+struct dgamelumpheader_t
+{
+    std::int32_t lumpCount;	// number of game lumps
+    dgamelump_t gamelump[lumpCount];
+};
+
 class dnode_t
 {
     using type_min_max  = std::array<std::int16_t, 3>;
