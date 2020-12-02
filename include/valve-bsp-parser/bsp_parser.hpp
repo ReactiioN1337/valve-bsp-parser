@@ -55,9 +55,9 @@ private:
         std::ifstream& file
     ); 
     
-    bool parse_entities(
-        std::ifstream& file
-    );
+    //bool parse_entities(
+    //    std::ifstream& file
+    //);
 
     bool parse_polygons();
 
@@ -133,9 +133,14 @@ public:
         valve::trace_t* out
     );
 
+
+
+
+    //TODO: Should all of this be public?
 private:
     std::string                      _map_name;
     valve::dheader_t                 _bsp_header;
+    //entities go here
     std::vector<valve::mvertex_t>    _vertices;
     std::vector<valve::cplane_t>     _planes;
     std::vector<valve::dedge_t>      _edges;
