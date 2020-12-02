@@ -5,7 +5,7 @@ cmake_minimum_required (VERSION 3.8)
 
 
 
-set (CMAKE_CXX_STANDARD 17)
+set (CMAKE_CXX_STANDARD 17) #this does not change __cplusplus var in MSVC for some reason
 
 project ("valve-bsp-parser")
 
