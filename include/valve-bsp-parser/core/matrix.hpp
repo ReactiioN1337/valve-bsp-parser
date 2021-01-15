@@ -295,7 +295,7 @@ public:
         return at( row_index * num_cols + col_index );
     }
 
-    _NODISCARD
+    NODISCARD
     const float& at(
         const std::size_t index
     ) const
@@ -303,7 +303,7 @@ public:
         return _data.at( clamp_index( index ) );
     }
 
-    _NODISCARD
+    NODISCARD
     const float& at(
         const std::size_t row_index,
         const std::size_t col_index
@@ -312,13 +312,13 @@ public:
         return at( row_index * num_cols + col_index );
     }
 
-    _NODISCARD
+    NODISCARD
     bool is_zero() const
     {
         return all_of( 0.f );
     }
 
-    _NODISCARD
+    NODISCARD
     bool all_of(
         const float value
     ) const
@@ -329,7 +329,7 @@ public:
         } );
     }
 
-    _NODISCARD
+    NODISCARD
     float normsqr() const
     {
         static_assert( is_vector(), "norm() can only be used on vectors" );
@@ -343,10 +343,10 @@ public:
         return value;
     }
 
-    _NODISCARD
+    NODISCARD
     float norm() const
     {
-        return std::sqrtf( normsqr() );
+        return std::sqrt( normsqr() );
     }
 
     matrix_t<1, num_cols> row(
@@ -421,7 +421,7 @@ public:
         ( *this ) /= norm();
     }
 
-    _NODISCARD
+    NODISCARD
     matrix_t normalized() const
     {
         auto lhs = *this;
@@ -430,7 +430,7 @@ public:
     }
 
     template<std::size_t rhs_num_rows, std::size_t rhs_num_cols>
-    _NODISCARD
+    NODISCARD
     float dot(
         const matrix_t<rhs_num_rows, rhs_num_cols>& rhs
     ) const
@@ -447,7 +447,7 @@ public:
         return value;
     }
 
-    _NODISCARD
+    NODISCARD
     matrix_t cross(
         const matrix_t& rhs
     ) const
@@ -461,7 +461,7 @@ public:
         };
     }
 
-    _NODISCARD
+    NODISCARD
     matrix_t ncross(
         const matrix_t& rhs
     ) const

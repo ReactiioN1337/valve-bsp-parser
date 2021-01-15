@@ -17,3 +17,14 @@
 #include <fstream>
 #include <string>
 #include <vector>
+
+
+// check for nodiscard
+
+#if __cplusplus >= 201703L // in MSVC this variable is bogus and refers to C++98 version.
+    #define NODISCARD [[nodiscard]]
+#elif defined(_MSC_VER)
+    #define NODISCARD _NODISCARD
+#else
+    #define NODISCARD [[nodiscard]]
+#endif

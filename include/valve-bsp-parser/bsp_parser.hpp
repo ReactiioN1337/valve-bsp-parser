@@ -7,6 +7,7 @@
 
 #include <valve-bsp-parser/core/valve_structs.hpp>
 #include <shared_mutex>
+#include <LzmaLib.h>
 
 namespace rn {
 class bsp_parser final
@@ -53,7 +54,11 @@ private:
 
     bool parse_leafbrushes(
         std::ifstream& file
-    );
+    ); 
+    
+    //bool parse_entities(
+    //    std::ifstream& file
+    //);
 
     bool parse_polygons();
 
@@ -81,7 +86,7 @@ private:
     )const;
 
     template<typename type>
-    _NODISCARD
+    NODISCARD
     bool parse_lump(
         std::ifstream&          file,
         const valve::lump_index lump_index,
@@ -92,15 +97,49 @@ private:
         if( index >= _bsp_header.lumps.size() ) {
             return false;
         }
+        //TODO: decompress lump here if compressed
+        //Default behavior is casting data to underlying types.
+        //It doesn't handle compression
+        
+
+        //There are two exceptions though: Game lumps (35) (yes, multiple; compressed individually), and PAK Lump (40) (basically a zip file)
+
 
         const auto& lump = _bsp_header.lumps.at( index );
         const auto size  = static_cast<std::size_t>( lump.file_size ) / sizeof( type );
 
-        out.resize( size );
+        //out.resize( size );
 
+        
         file.seekg( lump.file_offset );
-        file.read( reinterpret_cast<char*>( out.data() ), size * static_cast<std::size_t>( sizeof( type ) ) );
+        //Temporarily make this array. This data may be compressed.
+        char* tmpData = new char[lump.file_size + 1];
+        //bool isCompressed = false;
+        memset(tmpData, 0, lump.file_size + 1);
 
+        file.read(tmpData, lump.file_size);
+
+        lzma_header_t lzma_header;
+
+        memcpy(&lzma_header, tmpData, sizeof(lzma_header));
+
+        if (has_valid_lzma_ident(lzma_header.id))
+        {
+            assert(lump_index != valve::lump_index::game_lump || lump_index != valve::lump_index::pak_file); //Those have special rules regarding compression.
+            out.resize(static_cast<std::size_t>(lzma_header.actualSize) / sizeof(type));
+            LzmaUncompress(reinterpret_cast<char*>(out.data()), lzma_header.actualSize, tmpData, lzma_header.lzmaSize, &lzma_header.properties, LZMA_PROPS_SIZE);
+        }
+        else
+        {
+            out.resize(size);
+            out.assign(tmpData,tmpData+lump.file_size);
+        }
+
+        
+
+
+        //file.read( reinterpret_cast<char*>( out.data() ), size * static_cast<std::size_t>( sizeof( type ) ) );
+        delete[] tmpData;
         return true;
     }
 
@@ -121,9 +160,14 @@ public:
         valve::trace_t* out
     );
 
+
+
+
+    //TODO: Should all of this be public?
 private:
     std::string                      _map_name;
     valve::dheader_t                 _bsp_header;
+    //entities go here
     std::vector<valve::mvertex_t>    _vertices;
     std::vector<valve::cplane_t>     _planes;
     std::vector<valve::dedge_t>      _edges;
