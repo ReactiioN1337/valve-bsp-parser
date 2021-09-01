@@ -286,7 +286,7 @@ struct dgamelump_t
 struct dgamelumpheader_t
 {
     std::int32_t lumpCount;	// number of game lumps
-    dgamelump_t gamelump[lumpCount];
+    dgamelump_t gamelump[];
 };
 
 class dnode_t

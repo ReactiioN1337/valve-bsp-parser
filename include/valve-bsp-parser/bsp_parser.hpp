@@ -1,4 +1,4 @@
-///--------------------------------------------------------------------------------
+﻿///--------------------------------------------------------------------------------
 ///-- Author        ReactiioN
 ///-- Copyright     2016-2020, ReactiioN
 ///-- License       MIT
@@ -8,6 +8,9 @@
 #include <valve-bsp-parser/core/valve_structs.hpp>
 #include <shared_mutex>
 #include <LzmaLib.h>
+#include <cstring>
+#include <cassert>
+#include <mutex>
 
 namespace rn {
 class bsp_parser final
@@ -93,8 +96,10 @@ private:
         std::vector<type>&      out
     ) const
     {
+        using rn::valve::lzma_header_t;
+        using rn::valve::has_valid_lzma_ident;
         const auto index = static_cast<std::underlying_type_t<valve::lump_index>>( lump_index );
-        if( index >= _bsp_header.lumps.size() ) {
+        if( index >= bsp_header.lumps.size() ) {
             return false;
         }
         //TODO: decompress lump here if compressed
@@ -105,7 +110,7 @@ private:
         //There are two exceptions though: Game lumps (35) (yes, multiple; compressed individually), and PAK Lump (40) (basically a zip file)
 
 
-        const auto& lump = _bsp_header.lumps.at( index );
+        const auto& lump = bsp_header.lumps.at( index );
         const auto size  = static_cast<std::size_t>( lump.file_size ) / sizeof( type );
 
         //out.resize( size );
@@ -113,26 +118,41 @@ private:
         
         file.seekg( lump.file_offset );
         //Temporarily make this array. This data may be compressed.
-        char* tmpData = new char[lump.file_size + 1];
+        char* tmpData = new char[lump.file_size +sizeof(lzma_header_t) + 1]; //lump.file_size doesn't count size of the header
+
+
+        char* tmpUncompressedData;
         //bool isCompressed = false;
-        memset(tmpData, 0, lump.file_size + 1);
+        memset(tmpData, 0, lump.file_size +sizeof(lzma_header_t) + 1);
 
         file.read(tmpData, lump.file_size);
 
         lzma_header_t lzma_header;
 
         memcpy(&lzma_header, tmpData, sizeof(lzma_header));
+        tmpUncompressedData = new char[lzma_header.actualSize+1];
 
         if (has_valid_lzma_ident(lzma_header.id))
         {
             assert(lump_index != valve::lump_index::game_lump || lump_index != valve::lump_index::pak_file); //Those have special rules regarding compression.
+
+            size_t lzmaSize = lzma_header.lzmaSize,realSize = lzma_header.actualSize;
+
+
+            LzmaUncompress(reinterpret_cast<unsigned char*>(tmpUncompressedData),
+                           &realSize,
+                           reinterpret_cast<unsigned char*>(tmpData+sizeof(lzma_header_t)), //point to actual data, not the header
+                           &lzmaSize,
+                           reinterpret_cast<unsigned char*>(lzma_header.properties.data()),
+                           LZMA_PROPS_SIZE);
             out.resize(static_cast<std::size_t>(lzma_header.actualSize) / sizeof(type));
-            LzmaUncompress(reinterpret_cast<char*>(out.data()), lzma_header.actualSize, tmpData, lzma_header.lzmaSize, &lzma_header.properties, LZMA_PROPS_SIZE);
+            out.assign(reinterpret_cast<type*>(tmpUncompressedData),reinterpret_cast<type*>(tmpUncompressedData+realSize));
+
         }
         else
         {
-            out.resize(size);
-            out.assign(tmpData,tmpData+lump.file_size);
+            out.resize(size/sizeof(type));
+            out.assign(reinterpret_cast<type*>(tmpData),reinterpret_cast<type*>(tmpData+lump.file_size));
         }
 
         
@@ -163,24 +183,25 @@ public:
 
 
 
-    //TODO: Should all of this be public?
-private:
-    std::string                      _map_name;
-    valve::dheader_t                 _bsp_header;
+    //TODO: Cannot remove leading underscores as some code relies on it.
+public:
+    std::string                      map_name;
+    valve::dheader_t                 bsp_header;
     //entities go here
-    std::vector<valve::mvertex_t>    _vertices;
-    std::vector<valve::cplane_t>     _planes;
-    std::vector<valve::dedge_t>      _edges;
-    std::vector<std::int32_t>        _surf_edges;
-    std::vector<valve::dleaf_t>      _leaves;
-    std::vector<valve::snode_t>      _nodes;
-    std::vector<valve::dface_t>      _surfaces;
-    std::vector<valve::texinfo_t>    _tex_infos;
-    std::vector<valve::dbrush_t>     _brushes;
-    std::vector<valve::dbrushside_t> _brush_sides;
-    std::vector<std::uint16_t>       _leaf_faces;
-    std::vector<std::uint16_t>       _leaf_brushes;
-    std::vector<valve::polygon>      _polygons;
+    std::vector<valve::mvertex_t>    vertices;
+    std::vector<valve::cplane_t>     planes;
+    std::vector<valve::dedge_t>      edges;
+    std::vector<std::int32_t>        surf_edges;
+    std::vector<valve::dleaf_t>      leaves;
+    std::vector<valve::snode_t>      nodes;
+    std::vector<valve::dface_t>      surfaces;
+    std::vector<valve::texinfo_t>    tex_infos;
+    std::vector<valve::dbrush_t>     brushes;
+    std::vector<valve::dbrushside_t> brush_sides;
+    std::vector<std::uint16_t>       leaf_faces;
+    std::vector<std::uint16_t>       leaf_brushes;
+    std::vector<valve::polygon>      polygons;
+private:
     mutable std::shared_timed_mutex  _mutex;
 };
 }
