@@ -11,6 +11,7 @@
 #include <cstring>
 #include <cassert>
 #include <mutex>
+#include <optional>
 
 namespace rn {
 class bsp_parser final
@@ -43,20 +44,29 @@ private:
         std::string&       file_path
     );
 
+
     bool parse_planes(
-        std::ifstream& file
+        std::ifstream& file,
+        std::optional<valve::lumpfileheader_t> lumpFileHeader
+    );
+    bool parse_entities(
+        std::ifstream& file,
+        std::optional<valve::lumpfileheader_t> lumpFileHeader
     );
 
     bool parse_nodes(
-        std::ifstream& file
+        std::ifstream& file,
+        std::optional<valve::lumpfileheader_t> lumpFileHeader
     );
 
     bool parse_leaffaces(
-        std::ifstream& file
+        std::ifstream& file,
+        std::optional<valve::lumpfileheader_t> lumpFileHeader
     );
 
     bool parse_leafbrushes(
-        std::ifstream& file
+        std::ifstream& file,
+        std::optional<valve::lumpfileheader_t> lumpFileHeader
     ); 
     
     //bool parse_entities(
@@ -93,39 +103,56 @@ private:
     bool parse_lump(
         std::ifstream&          file,
         const valve::lump_index lump_index,
-        std::vector<type>&      out
+        std::vector<type>&      out,
+        std::optional<valve::lumpfileheader_t> fileLump = std::nullopt
     ) const
     {
         using rn::valve::lzma_header_t;
         using rn::valve::has_valid_lzma_ident;
         const auto index = static_cast<std::underlying_type_t<valve::lump_index>>( lump_index );
+
+
+
         if( index >= bsp_header.lumps.size() ) {
             return false;
         }
         //TODO: decompress lump here if compressed
         //Default behavior is casting data to underlying types.
         //It doesn't handle compression
-        
+
 
         //There are two exceptions though: Game lumps (35) (yes, multiple; compressed individually), and PAK Lump (40) (basically a zip file)
 
 
         const auto& lump = bsp_header.lumps.at( index );
-        const auto size  = static_cast<std::size_t>( lump.file_size ) / sizeof( type );
 
+        std::size_t lumpOffset,lumpSize;
+
+        valve::lumpfileheader_t lumpPatch;
+        if (fileLump.has_value()) {
+               lumpPatch = fileLump.value();
+               lumpOffset = lumpPatch.file_offset;
+               lumpSize = lumpPatch.file_size;
+        } else {
+
+            lumpOffset = lump.file_offset;
+            lumpSize = lump.file_size;
+        }
+
+        auto size  = static_cast<std::size_t>( lumpSize ) / sizeof( type );
         //out.resize( size );
 
         
-        file.seekg( lump.file_offset );
+        file.seekg( lumpOffset );
         //Temporarily make this array. This data may be compressed.
-        char* tmpData = new char[lump.file_size +sizeof(lzma_header_t) + 1]; //lump.file_size doesn't count size of the header
+        char* tmpData = new char[lumpSize +sizeof(lzma_header_t) + 1]; //lump.file_size doesn't count size of the header
 
 
         char* tmpUncompressedData;
         //bool isCompressed = false;
-        memset(tmpData, 0, lump.file_size +sizeof(lzma_header_t) + 1);
+        memset(tmpData, 0, lumpSize +sizeof(lzma_header_t) + 1);
 
-        file.read(tmpData, lump.file_size);
+        file.read(tmpData, lumpSize);
 
         lzma_header_t lzma_header;
 
@@ -152,7 +179,7 @@ private:
         else
         {
             out.resize(size/sizeof(type));
-            out.assign(reinterpret_cast<type*>(tmpData),reinterpret_cast<type*>(tmpData+lump.file_size));
+            out.assign(reinterpret_cast<type*>(tmpData),reinterpret_cast<type*>(tmpData+lumpSize));
         }
 
         
@@ -201,6 +228,7 @@ public:
     std::vector<std::uint16_t>       leaf_faces;
     std::vector<std::uint16_t>       leaf_brushes;
     std::vector<valve::polygon>      polygons;
+    std::vector<valve::entity_t>     entities;
 private:
     mutable std::shared_timed_mutex  _mutex;
 };

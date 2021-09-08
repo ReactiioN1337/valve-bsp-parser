@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <cstring>
 #include <cfloat>
+#include <regex>
 
 using namespace rn;
 
@@ -42,6 +43,7 @@ bsp_parser& bsp_parser::operator = (
     leaf_faces   = std::move( rhs.leaf_faces );
     leaf_brushes = std::move( rhs.leaf_brushes );
     polygons     = std::move( rhs.polygons );
+    entities     = std::move( rhs.entities );
 
     return *this;
 }
@@ -76,11 +78,12 @@ bool bsp_parser::set_current_map(
 }
 
 bool bsp_parser::parse_planes(
-    std::ifstream& file
+    std::ifstream& file,
+    std::optional<valve::lumpfileheader_t> lumpFileHeader = std::nullopt
 )
 {
     std::vector<valve::dplane_t> planes;
-    if( !parse_lump( file, valve::lump_index::planes, planes ) ) {
+    if( !parse_lump( file, valve::lump_index::planes, planes ,lumpFileHeader) ) {
         return false;
     }
 
@@ -106,12 +109,57 @@ bool bsp_parser::parse_planes(
     return true;
 }
 
+bool bsp_parser::parse_entities(std::ifstream &file, std::optional<valve::lumpfileheader_t> lumpFileHeader=std::nullopt)
+{
+
+    std::vector<char> entitiesRawBuffer;
+
+    if (!parse_lump(file,valve::lump_index::entities,entitiesRawBuffer,lumpFileHeader)) {
+        return false;
+    }
+
+    std::string entitiesLump(entitiesRawBuffer.begin(),entitiesRawBuffer.end());
+
+    //clean old entities
+    entities.clear();
+
+
+    std::istringstream entStream{entitiesLump};
+
+
+    valve::entity_t entity;
+    std::string line;
+    std::smatch kvMatch;
+
+    try {
+
+    std::regex entKVRegex("\"(.*?)\" \"(.*?)\"");
+
+    while (std::getline(entStream,line)) {
+        if (line=="{") {
+            entity = *new valve::entity_t();
+        } else if (line=="}") {
+            entities.push_back(entity);
+        } else if (std::regex_match(line,kvMatch,entKVRegex)) {
+            if (kvMatch.size() >=3) {
+                entity.keyvalues.emplace(kvMatch[1],kvMatch[2]);
+            }
+        }
+    }
+
+    }  catch (std::regex_error &e) {
+        std::printf("Regex error: %s",e.what());
+    }
+    return true;
+}
+
 bool bsp_parser::parse_nodes(
-    std::ifstream& file
+    std::ifstream& file,
+        std::optional<valve::lumpfileheader_t> lumpFileHeader = std::nullopt
 )
 {
     std::vector<valve::dnode_t> nodes;
-    if( !parse_lump( file, valve::lump_index::nodes, nodes ) ) {
+    if( !parse_lump( file, valve::lump_index::nodes, nodes ,lumpFileHeader) ) {
         return false;
     }
 
@@ -148,10 +196,11 @@ bool bsp_parser::parse_nodes(
 }
 
 bool bsp_parser::parse_leaffaces(
-    std::ifstream& file
+    std::ifstream& file,
+        std::optional<valve::lumpfileheader_t> lumpFileHeader = std::nullopt
 )
 {
-    if( !parse_lump( file, valve::lump_index::leaf_faces, leaf_faces ) ) {
+    if( !parse_lump( file, valve::lump_index::leaf_faces, leaf_faces ,lumpFileHeader) ) {
         return false;
     }
 
@@ -167,10 +216,11 @@ bool bsp_parser::parse_leaffaces(
 }
 
 bool bsp_parser::parse_leafbrushes(
-    std::ifstream& file
+    std::ifstream& file,
+        std::optional<valve::lumpfileheader_t> lumpFileHeader = std::nullopt
 )
 {
-    if( !parse_lump( file, valve::lump_index::leaf_brushes, leaf_brushes ) ) {
+    if( !parse_lump( file, valve::lump_index::leaf_brushes, leaf_brushes,lumpFileHeader) ) {
         return false;
     }
 
@@ -534,12 +584,182 @@ bool bsp_parser::load_map(
             && parse_lump( file, valve::lump_index::brush_sides, brush_sides )
             && parse_leaffaces( file )
             && parse_leafbrushes( file )
+            && parse_entities(file)
             && parse_polygons()
         ;
         if (!baseMapParsed)
             return false;
 
         // TODO add standalone lump files.
+
+        //first strip bsp and add lmp extension
+
+        std::string lmpFormattedPath = file_path.substr(0,file_path.size()-4); //remove .bsp
+
+
+        lmpFormattedPath.append("_l_");
+
+
+        for (int i=0;;i++){
+            std::string thisLmpFile = lmpFormattedPath + std::to_string(i)+".lmp";
+
+            std::ifstream file(thisLmpFile, std::ios_base::binary); // file of lumpPatch 0
+            if (!file.good()) {
+                break; // file likely not present. We're finished
+            }
+
+            //Alright. File present. Parse the header of the file.
+            rn::valve::lumpfileheader_t lumpFileHeader;
+
+
+
+            file.read( reinterpret_cast<char*>( &lumpFileHeader ), sizeof( lumpFileHeader ) );
+
+            bool surfacesInvalidated = false;
+            //Now that we have header ready we need to know which lump we're replacing
+            switch (static_cast<valve::lump_index>(lumpFileHeader.lumpID)) {
+
+            case valve::lump_index::entities: {
+                auto _oldLump = entities;
+                if (!parse_entities(file,std::make_optional(lumpFileHeader))) {
+                    entities = _oldLump;
+                }
+                break;
+            }
+            case valve::lump_index::vertices: {
+
+                auto _oldLump = std::vector(vertices);
+                if (!parse_lump(file,valve::lump_index::vertices,vertices),std::make_optional(lumpFileHeader)) {
+                    vertices = _oldLump;
+                }
+                break;
+                }
+
+            case valve::lump_index::planes: {
+
+
+                auto _oldLump = planes;
+                if (!parse_planes(file,std::make_optional(lumpFileHeader))) {
+                    planes = _oldLump;
+                }
+                    break;
+
+            }
+            case valve::lump_index::edges: {
+
+
+                auto _oldLump = edges;
+                if (!parse_lump(file,valve::lump_index::edges,edges),std::make_optional(lumpFileHeader)) {
+                    edges = _oldLump;
+                }
+                    break;
+
+            }
+            case valve::lump_index::surfedges: {
+
+
+                auto _oldLump = surf_edges;
+                if (!parse_lump(file,valve::lump_index::surfedges,surf_edges),std::make_optional(lumpFileHeader)) {
+                    surf_edges = _oldLump;
+                }
+                    break;
+
+            }
+            case valve::lump_index::leafs: {
+
+
+                auto _oldLump = leaves;
+                if (!parse_lump(file,valve::lump_index::leafs,leaves),std::make_optional(lumpFileHeader)) {
+                    leaves = _oldLump;
+                }
+                    break;
+
+            }
+            case valve::lump_index::nodes: {
+
+
+                auto _oldLump = nodes;
+                if (!parse_nodes(file,std::make_optional(lumpFileHeader))) {
+                    nodes = _oldLump;
+                }
+                    break;
+
+            }
+            case valve::lump_index::faces: {
+
+
+                auto _oldLump = surfaces;
+                if (!parse_lump(file,valve::lump_index::faces,surfaces),std::make_optional(lumpFileHeader)) {
+                    surfaces = _oldLump;
+                } else surfacesInvalidated = true;
+                    break;
+
+            }
+            case valve::lump_index::tex_info: {
+
+
+                auto _oldLump = tex_infos;
+                if (!parse_lump(file,valve::lump_index::tex_info,tex_infos),std::make_optional(lumpFileHeader)) {
+                    tex_infos = _oldLump;
+                }
+                    break;
+
+            }
+            case valve::lump_index::brushes: {
+
+
+                auto _oldLump = brushes;
+                if (!parse_lump(file,valve::lump_index::brushes,brushes),std::make_optional(lumpFileHeader)) {
+                    brushes = _oldLump;
+                }
+                    break;
+
+            }
+            case valve::lump_index::brush_sides: {
+
+
+                auto _oldLump = brush_sides;
+                if (!parse_lump(file,valve::lump_index::brush_sides,brush_sides),std::make_optional(lumpFileHeader)) {
+                    brush_sides = _oldLump;
+                }
+                    break;
+
+            }
+            case valve::lump_index::leaf_faces: {
+
+
+                auto _oldLump = leaf_faces;
+                if (!parse_leaffaces(file,std::make_optional(lumpFileHeader))) {
+                    leaf_faces = _oldLump;
+                }
+                    break;
+
+            }
+            case valve::lump_index::leaf_brushes: {
+
+
+                auto _oldLump = leaf_brushes;
+                if (!parse_leaffaces(file,std::make_optional(lumpFileHeader))) {
+                    leaf_brushes = _oldLump;
+                }
+                    break;
+
+            }
+            default:
+                break;
+            }
+
+
+
+
+
+            std::string nextLmpFile = lmpFormattedPath + std::to_string(i+1)+".lmp"; //Is next file lump present?
+            std::ifstream fileNext(nextLmpFile, std::ios_base::binary);
+            if (!fileNext.good()) {
+                break; // file likely not present. We're finished
+            }
+        }
+        parse_polygons();
 
         return true;
     }
