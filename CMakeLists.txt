@@ -34,7 +34,11 @@ set (SOURCES
 add_library(valve-bsp-parser STATIC  ${PRIVATE_INCLUDES} ${SOURCES})
 
 
-add_subdirectory(thirdparty/liblzma)
+
+if (NOT TARGET lzma)
+
+    add_subdirectory(thirdparty/liblzma)
+endif()
 add_dependencies(valve-bsp-parser lzma)
 target_include_directories(valve-bsp-parser PUBLIC
     ${Boost_INCLUDE_DIR}
