@@ -1,9 +1,9 @@
 ﻿# CMakeList.txt: projekt CMake dla elementu vpk_kv_generator, dołącz źródło i zdefiniuj
 # tutaj logikę specyficzną dla projektu.
 #
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.10)
 
-
+include_guard(GLOBAL)
 
 set (CMAKE_CXX_STANDARD 17) #this does not change __cplusplus var in MSVC for some reason
 
@@ -35,16 +35,18 @@ add_library(valve-bsp-parser STATIC  ${PRIVATE_INCLUDES} ${SOURCES})
 
 
 
-if (NOT TARGET lzma)
 
     add_subdirectory(thirdparty/liblzma)
-endif()
+
 add_dependencies(valve-bsp-parser lzma)
 target_include_directories(valve-bsp-parser PUBLIC
     ${Boost_INCLUDE_DIR}
     "${PROJECT_SOURCE_DIR}/include/"
     "${PROJECT_SOURCE_DIR}/thirdparty/liblzma/include"
     )
+
+
+target_link_libraries(valve-bsp-parser PRIVATE lzma)
     
 # /MT in MSVC compiler. Do check if we can use shared-mutex in gcc and clang
     set_property(TARGET valve-bsp-parser PROPERTY
