@@ -48,8 +48,6 @@ target_include_directories(valve-bsp-parser PUBLIC
 
 target_link_libraries(valve-bsp-parser PRIVATE lzma)
     
-# /MT in MSVC compiler. Do check if we can use shared-mutex in gcc and clang
-    set_property(TARGET valve-bsp-parser PROPERTY
-  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 
 # TODO: Dodaj testy i zainstaluj elementy docelowe w razie potrzeby.
