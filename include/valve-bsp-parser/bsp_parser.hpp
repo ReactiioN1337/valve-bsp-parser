@@ -142,26 +142,35 @@ private:
         auto size  = static_cast<std::size_t>( lumpSize ) / sizeof( type );
         //out.resize( size );
 
-        
+
+        char* tmpData = new char[lumpSize + sizeof(lzma_header_t) + 1]; //lump.file_size doesn't count size of the header
         file.seekg( lumpOffset );
         //Temporarily make this array. This data may be compressed.
-        char* tmpData = new char[lumpSize +sizeof(lzma_header_t) + 1]; //lump.file_size doesn't count size of the header
-
-
-        char* tmpUncompressedData;
-        //bool isCompressed = false;
-        memset(tmpData, 0, lumpSize +sizeof(lzma_header_t) + 1);
+        
+        memset(tmpData, 0, lumpSize + sizeof(lzma_header_t) + 1);
 
         file.read(tmpData, lumpSize);
 
         lzma_header_t lzma_header;
-
         memcpy(&lzma_header, tmpData, sizeof(lzma_header));
-        tmpUncompressedData = new char[lzma_header.actualSize+1];
+
 
         if (has_valid_lzma_ident(lzma_header.id))
         {
             assert(lump_index != valve::lump_index::game_lump || lump_index != valve::lump_index::pak_file); //Those have special rules regarding compression.
+
+
+
+            //This section below was BEFORE if check. This resulted on malloc pulling array size from garbage data
+            //without checking if data were actually compressed.
+
+
+            char* tmpUncompressedData;
+            //bool isCompressed = false;
+
+           
+            tmpUncompressedData = new char[lzma_header.actualSize + 1];
+
 
             size_t lzmaSize = lzma_header.lzmaSize,realSize = lzma_header.actualSize;
 
@@ -174,6 +183,7 @@ private:
                            LZMA_PROPS_SIZE);
             out.resize(static_cast<std::size_t>(lzma_header.actualSize) / sizeof(type));
             out.assign(reinterpret_cast<type*>(tmpUncompressedData),reinterpret_cast<type*>(tmpUncompressedData+realSize));
+            delete[] tmpUncompressedData;
 
         }
         else
@@ -206,6 +216,7 @@ public:
         const vector3&  final,
         valve::trace_t* out
     );
+    void unload_map();
 
 
 

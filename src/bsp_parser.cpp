@@ -48,6 +48,27 @@ bsp_parser& bsp_parser::operator = (
     return *this;
 }
 
+void rn::bsp_parser::unload_map()
+{
+    std::unique_lock<std::shared_timed_mutex> lock(_mutex);
+
+    std::memset(&bsp_header, 0, sizeof(valve::dheader_t));
+    this->map_name = *new std::string();
+    entities.clear();
+    vertices.clear();
+    edges.clear();
+    surf_edges.clear();
+    leaves.clear();
+    nodes.clear();
+    surfaces.clear();
+    tex_infos.clear();
+    brushes.clear();
+    brush_sides.clear();
+    leaf_faces.clear();
+    leaf_brushes.clear();
+    polygons.clear();
+}
+
 bool bsp_parser::set_current_map(
     const std::string& directory,
     const std::string& map_name,
