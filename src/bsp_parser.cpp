@@ -53,7 +53,7 @@ void rn::bsp_parser::unload_map()
     std::unique_lock<std::shared_timed_mutex> lock(_mutex);
 
     std::memset(&bsp_header, 0, sizeof(valve::dheader_t));
-    this->map_name = *new std::string();
+    this->map_name = std::string();
     entities.clear();
     vertices.clear();
     edges.clear();
@@ -158,7 +158,7 @@ bool bsp_parser::parse_entities(std::ifstream &file, std::optional<valve::lumpfi
 
     while (std::getline(entStream,line)) {
         if (line=="{") {
-            entity = *new valve::entity_t();
+            entity = valve::entity_t();
         } else if (line=="}") {
             entities.push_back(entity);
         } else if (std::regex_match(line,kvMatch,entKVRegex)) {
