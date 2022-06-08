@@ -12,7 +12,8 @@ constexpr bool has_valid_bsp_ident(
     const std::int32_t ident
 )
 {
-    return ident >= ( 'P' << 24 ) + ( 'S' << 16 ) + ( 'B' << 8 ) + 'V';
+    //Why the check was >= instead of == I'll never know
+    return ident == ( 'P' << 24 ) + ( 'S' << 16 ) + ( 'B' << 8 ) + 'V';
 }
 
 constexpr std::int32_t MAX_BRUSH_LIGHTMAP_DIM_WITHOUT_BORDER   = 32;
@@ -183,6 +184,35 @@ public:
     type_four_cc four_cc{};    // 0xC
 };//Size=0x10
 
+class lumpfileheader_t
+{
+public:
+    std::int32_t file_offset = 0;   // offset in the file where the lump data begins (should be 0x14)
+    std::int32_t lumpID = 0;       // the lump ID according to the lump table
+    std::int32_t version = 0;  // same as "version" in lump_t
+    std::int32_t file_size = 0;   // same as "filelen" in lump_t
+    std::int32_t map_revidion = 0;  // same as in dheader_t
+}; //Size=0x14
+
+
+constexpr bool has_valid_lzma_ident(
+    const std::int32_t ident
+)
+{
+    return ident == ('A' << 24) + ('M' << 16) + ('Z' << 8) + 'L';
+}
+#pragma pack(1)
+class lzma_header_t
+{
+    using type_lzma_prop = std::array<char, 5>;
+public:
+    std::int32_t	id;
+    std::int32_t	actualSize;		// always little endian
+    std::int32_t	lzmaSize;		// always little endian
+    type_lzma_prop	properties;
+};
+#pragma pack()
+
 class dheader_t
 {
     using type_lumps = std::array<lump_t, HEADER_LUMPS>;
@@ -214,6 +244,14 @@ private:
     std::uint8_t _pad0x12[ 0x2 ]{}; // 0x12
 };//Size=0x14
 
+
+
+class entity_t
+{
+public:
+    std::unordered_map<std::string,std::string> keyvalues;
+};
+
 class dedge_t
 {
 public:
@@ -243,6 +281,22 @@ public:
     std::uint16_t num_leafbrushes;    // 0x2C
     std::int16_t  leaf_water_data_id; // 0x2E
 };//Size=0x30
+
+struct dgamelump_t
+{
+    std::int32_t		id;		// gamelump ID
+    std::uint16_t	flags;		// flags
+    std::uint16_t	version;	// gamelump version
+    std::int32_t		fileofs;	// offset to this gamelump
+    std::int32_t		filelen;	// length
+};
+
+
+struct dgamelumpheader_t
+{
+    std::int32_t lumpCount;	// number of game lumps
+    dgamelump_t gamelump[];
+};
 
 class dnode_t
 {
@@ -375,7 +429,7 @@ public:
         return *this;
     }
 
-    _NODISCARD
+    NODISCARD
     float dist(
         const vector3& destination
     ) const

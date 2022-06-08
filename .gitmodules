@@ -1,0 +1,3 @@
+[submodule "thirdparty/liblzma"]
+	path = thirdparty/liblzma
+	url = https://github.com/SlawekNowy/liblzma
