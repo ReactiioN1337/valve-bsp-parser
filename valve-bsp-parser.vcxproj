@@ -27,28 +27,28 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -97,7 +97,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)thirdparty\liblzma\include;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -115,7 +115,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)thirdparty\liblzma\include;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -133,7 +133,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)thirdparty\liblzma\include;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -151,7 +151,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)thirdparty\liblzma\include;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -164,12 +164,39 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\bsp_parser.cpp" />
+    <ClCompile Include="thirdparty\liblzma\src\Alloc.c" />
+    <ClCompile Include="thirdparty\liblzma\src\LzFind.c" />
+    <ClCompile Include="thirdparty\liblzma\src\LzmaDec.c" />
+    <ClCompile Include="thirdparty\liblzma\src\LzmaEnc.c" />
+    <ClCompile Include="thirdparty\liblzma\src\LzmaLib.c" />
+    <ClCompile Include="thirdparty\liblzma\src\win\LzFindMt.c" />
+    <ClCompile Include="thirdparty\liblzma\src\win\LzmaLibExports.c" />
+    <ClCompile Include="thirdparty\liblzma\src\win\Threads.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\valve-bsp-parser\bsp_parser.hpp" />
     <ClInclude Include="include\valve-bsp-parser\core\matrix.hpp" />
     <ClInclude Include="include\valve-bsp-parser\core\requirements.hpp" />
     <ClInclude Include="include\valve-bsp-parser\core\valve_structs.hpp" />
+    <ClInclude Include="thirdparty\liblzma\include\7zTypes.h" />
+    <ClInclude Include="thirdparty\liblzma\include\Alloc.h" />
+    <ClInclude Include="thirdparty\liblzma\include\Compiler.h" />
+    <ClInclude Include="thirdparty\liblzma\include\LzFind.h" />
+    <ClInclude Include="thirdparty\liblzma\include\LzHash.h" />
+    <ClInclude Include="thirdparty\liblzma\include\LzmaDec.h" />
+    <ClInclude Include="thirdparty\liblzma\include\LzmaEnc.h" />
+    <ClInclude Include="thirdparty\liblzma\include\LzmaLib.h" />
+    <ClInclude Include="thirdparty\liblzma\include\Precomp.h" />
+    <ClInclude Include="thirdparty\liblzma\include\win\LzFindMt.h" />
+    <ClInclude Include="thirdparty\liblzma\include\win\Threads.h" />
+    <ClInclude Include="thirdparty\liblzma\src\win\7zVersion.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="thirdparty\liblzma\src\win\7zVersion.rc" />
+    <ResourceCompile Include="thirdparty\liblzma\src\win\resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="thirdparty\liblzma\src\win\LzmaLib.def" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

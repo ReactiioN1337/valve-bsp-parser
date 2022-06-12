@@ -5,9 +5,15 @@
 ///--------------------------------------------------------------------------------
 #include <valve-bsp-parser/bsp_parser.hpp>
 #include <filesystem>
+#include <cstring>
+#include <cfloat>
+#include <regex>
 
 using namespace rn;
 
+
+//TODO: handle compressed lumps, and standalone lump files
+//TODO: Lump 0 parser
 bsp_parser::bsp_parser(
     bsp_parser&& rhs
 ) noexcept
@@ -21,24 +27,46 @@ bsp_parser& bsp_parser::operator = (
 {
     std::unique_lock<std::shared_timed_mutex> lock( rhs._mutex );
 
-    _bsp_header = rhs._bsp_header;
-    std::memset( &rhs._bsp_header, 0, sizeof( valve::dheader_t ) );
+    bsp_header = rhs.bsp_header;
+    std::memset( &rhs.bsp_header, 0, sizeof( valve::dheader_t ) );
 
-    _vertices     = std::move( rhs._vertices );
-    _planes       = std::move( rhs._planes );
-    _edges        = std::move( rhs._edges );
-    _surf_edges   = std::move( rhs._surf_edges );
-    _leaves       = std::move( rhs._leaves );
-    _nodes        = std::move( rhs._nodes );
-    _surfaces     = std::move( rhs._surfaces );
-    _tex_infos    = std::move( rhs._tex_infos );
-    _brushes      = std::move( rhs._brushes );
-    _brush_sides  = std::move( rhs._brush_sides );
-    _leaf_faces   = std::move( rhs._leaf_faces );
-    _leaf_brushes = std::move( rhs._leaf_brushes );
-    _polygons     = std::move( rhs._polygons );
+    vertices     = std::move( rhs.vertices );
+    planes       = std::move( rhs.planes );
+    edges        = std::move( rhs.edges );
+    surf_edges   = std::move( rhs.surf_edges );
+    leaves       = std::move( rhs.leaves );
+    nodes        = std::move( rhs.nodes );
+    surfaces     = std::move( rhs.surfaces );
+    tex_infos    = std::move( rhs.tex_infos );
+    brushes      = std::move( rhs.brushes );
+    brush_sides  = std::move( rhs.brush_sides );
+    leaf_faces   = std::move( rhs.leaf_faces );
+    leaf_brushes = std::move( rhs.leaf_brushes );
+    polygons     = std::move( rhs.polygons );
+    entities     = std::move( rhs.entities );
 
     return *this;
+}
+
+void rn::bsp_parser::unload_map()
+{
+    std::unique_lock<std::shared_timed_mutex> lock(_mutex);
+
+    std::memset(&bsp_header, 0, sizeof(valve::dheader_t));
+    this->map_name = std::string();
+    entities.clear();
+    vertices.clear();
+    edges.clear();
+    surf_edges.clear();
+    leaves.clear();
+    nodes.clear();
+    surfaces.clear();
+    tex_infos.clear();
+    brushes.clear();
+    brush_sides.clear();
+    leaf_faces.clear();
+    leaf_brushes.clear();
+    polygons.clear();
 }
 
 bool bsp_parser::set_current_map(
@@ -61,7 +89,7 @@ bool bsp_parser::set_current_map(
         .append( "/" )
         .append( fix_seperators( map_name ) );
 
-    _map_name = map_name;
+    this->map_name = map_name;
 
 #if defined(RN_BSP_PARSER_MESSAGES)
     std::printf( "[+] Loading map: %s ...\n", map_name.data() );
@@ -71,18 +99,19 @@ bool bsp_parser::set_current_map(
 }
 
 bool bsp_parser::parse_planes(
-    std::ifstream& file
+    std::ifstream& file,
+    std::optional<valve::lumpfileheader_t> lumpFileHeader = std::nullopt
 )
 {
     std::vector<valve::dplane_t> planes;
-    if( !parse_lump( file, valve::lump_index::planes, planes ) ) {
+    if( !parse_lump( file, valve::lump_index::planes, planes ,lumpFileHeader) ) {
         return false;
     }
 
-    _planes.resize( planes.size() );
+    this->planes.resize( planes.size() );
 
     for( std::size_t i = 0; i < planes.size(); ++i ) {
-        auto& out      = _planes.at( i );
+        auto& out      = this->planes.at( i );
         const auto& in = planes.at( i );
 
         auto plane_bits = 0;
@@ -101,26 +130,71 @@ bool bsp_parser::parse_planes(
     return true;
 }
 
+bool bsp_parser::parse_entities(std::ifstream &file, std::optional<valve::lumpfileheader_t> lumpFileHeader=std::nullopt)
+{
+
+    std::vector<char> entitiesRawBuffer;
+
+    if (!parse_lump(file,valve::lump_index::entities,entitiesRawBuffer,lumpFileHeader)) {
+        return false;
+    }
+
+    std::string entitiesLump(entitiesRawBuffer.begin(),entitiesRawBuffer.end());
+
+    //clean old entities
+    entities.clear();
+
+
+    std::istringstream entStream{entitiesLump};
+
+
+    valve::entity_t entity;
+    std::string line;
+    std::smatch kvMatch;
+
+    try {
+
+    std::regex entKVRegex("\"(.*?)\" \"(.*?)\"");
+
+    while (std::getline(entStream,line)) {
+        if (line=="{") {
+            entity = valve::entity_t();
+        } else if (line=="}") {
+            entities.push_back(entity);
+        } else if (std::regex_match(line,kvMatch,entKVRegex)) {
+            if (kvMatch.size() >=3) {
+                entity.keyvalues.emplace(kvMatch[1],kvMatch[2]);
+            }
+        }
+    }
+
+    }  catch (std::regex_error &e) {
+        std::printf("Regex error: %s",e.what());
+    }
+    return true;
+}
+
 bool bsp_parser::parse_nodes(
-    std::ifstream& file
+    std::ifstream& file,
+        std::optional<valve::lumpfileheader_t> lumpFileHeader = std::nullopt
 )
 {
     std::vector<valve::dnode_t> nodes;
-    if( !parse_lump( file, valve::lump_index::nodes, nodes ) ) {
+    if( !parse_lump( file, valve::lump_index::nodes, nodes ,lumpFileHeader) ) {
         return false;
     }
 
     const auto num_nodes = nodes.size();
-    _nodes.resize( num_nodes );
+    this->nodes.resize( num_nodes );
 
     for( std::size_t i = 0; i < num_nodes; ++i ) {
         const auto& in = nodes.at( i );
-        auto& out      = _nodes.at( i );
+        auto& out      = this->nodes.at( i );
 
         out.mins       = in.mins;
         out.maxs       = in.maxs;
         out.plane_num  = in.plane_num;
-        out.plane      = _planes.data() + in.plane_num;
+        out.plane      = planes.data() + in.plane_num;
         out.first_face = in.first_face;
         out.num_faces  = in.num_faces;
 
@@ -130,10 +204,10 @@ bool bsp_parser::parse_nodes(
 
             if( child_index >= 0 ) {
                 out.leaf_children = nullptr;
-                out.node_children = _nodes.data() + child_index;
+                out.node_children = this->nodes.data() + child_index;
             }
             else {
-                out.leaf_children = _leaves.data() + static_cast<std::ptrdiff_t>( -1 - child_index );
+                out.leaf_children = this->leaves.data() + static_cast<std::ptrdiff_t>( -1 - child_index );
                 out.node_children = nullptr;
             }
         }
@@ -143,14 +217,15 @@ bool bsp_parser::parse_nodes(
 }
 
 bool bsp_parser::parse_leaffaces(
-    std::ifstream& file
+    std::ifstream& file,
+        std::optional<valve::lumpfileheader_t> lumpFileHeader = std::nullopt
 )
 {
-    if( !parse_lump( file, valve::lump_index::leaf_faces, _leaf_faces ) ) {
+    if( !parse_lump( file, valve::lump_index::leaf_faces, leaf_faces ,lumpFileHeader) ) {
         return false;
     }
 
-    const auto num_leaffaces = _leaf_faces.size();
+    const auto num_leaffaces = leaf_faces.size();
     if( num_leaffaces > valve::MAX_MAP_LEAFBRUSHES ) {
         printf( "[!] map has to many leaffaces, parsed more than required...\n" );
     }
@@ -162,14 +237,15 @@ bool bsp_parser::parse_leaffaces(
 }
 
 bool bsp_parser::parse_leafbrushes(
-    std::ifstream& file
+    std::ifstream& file,
+        std::optional<valve::lumpfileheader_t> lumpFileHeader = std::nullopt
 )
 {
-    if( !parse_lump( file, valve::lump_index::leaf_brushes, _leaf_brushes ) ) {
+    if( !parse_lump( file, valve::lump_index::leaf_brushes, leaf_brushes,lumpFileHeader) ) {
         return false;
     }
 
-    const auto num_leaffaces = _leaf_faces.size();
+    const auto num_leaffaces = leaf_faces.size();
     if( num_leaffaces > valve::MAX_MAP_LEAFBRUSHES ) {
         printf( "[!] map has to many leafbrushes, parsed more than required...\n" );
     }
@@ -182,9 +258,9 @@ bool bsp_parser::parse_leafbrushes(
 
 bool bsp_parser::parse_polygons()
 {
-    _polygons.resize( _surfaces.size() );
+    polygons.resize( surfaces.size() );
 
-    for( const auto& surface : _surfaces ) {
+    for( const auto& surface : surfaces ) {
         const auto& first_edge = surface.first_edge;
         const auto& num_edges  = surface.num_edges;
 
@@ -199,20 +275,20 @@ bool bsp_parser::parse_polygons()
         vector3 edge;
 
         for( auto i = 0; i < num_edges; ++i ) {
-            const auto edge_index = _surf_edges.at( first_edge + i );
+            const auto edge_index = surf_edges.at( first_edge + i );
             if( edge_index >= 0 ) {
-                edge = _vertices.at( _edges[ edge_index ].v.at( 0 ) ).position;
+                edge = vertices.at( edges[ edge_index ].v.at( 0 ) ).position;
             }
             else {
-                edge = _vertices.at( _edges[ -edge_index ].v.at( 1 ) ).position;
+                edge = vertices.at( edges[ -edge_index ].v.at( 1 ) ).position;
             }
             polygon.verts.at( i ) = edge;
         }
 
         polygon.num_verts      = static_cast<std::size_t>( num_edges );
-        polygon.plane.origin   = _planes.at( surface.plane_num ).normal;
-        polygon.plane.distance = _planes.at( surface.plane_num ).distance;
-        _polygons.push_back( polygon );
+        polygon.plane.origin   = planes.at( surface.plane_num ).normal;
+        polygon.plane.distance = planes.at( surface.plane_num ).distance;
+        polygons.push_back( polygon );
     }
 
     return true;
@@ -232,11 +308,11 @@ void bsp_parser::ray_cast_node(
     }
 
     if( node_index < 0 ) {
-        auto* leaf = &_leaves.at( static_cast<std::size_t>( -node_index - 1 ) );
+        auto* leaf = &leaves.at( static_cast<std::size_t>( -node_index - 1 ) );
         for( std::uint16_t i = 0; i < leaf->num_leafbrushes; ++i ) {
 
-            const auto brush_index = static_cast<std::int32_t>( _leaf_brushes.at( leaf->first_leafbrush + i ) );
-            auto* brush            = &_brushes.at( brush_index );
+            const auto brush_index = static_cast<std::int32_t>( leaf_brushes.at( leaf->first_leafbrush + i ) );
+            auto* brush            = &brushes.at( brush_index );
             if( !brush || !( brush->contents & valve::MASK_SHOT_HULL ) ) {
                 continue;
             }
@@ -252,12 +328,12 @@ void bsp_parser::ray_cast_node(
             return;
         }
         for( std::uint16_t i = 0; i < leaf->num_leaffaces; ++i ) {
-            ray_cast_surface( static_cast<std::int32_t>( _leaf_faces.at( leaf->first_leafface + i ) ), origin, destination, out );
+            ray_cast_surface( static_cast<std::int32_t>( leaf_faces.at( leaf->first_leafface + i ) ), origin, destination, out );
         }
         return;
     }
 
-    auto* node = &_nodes.at( static_cast<std::size_t>( node_index ) );
+    auto* node = &nodes.at( static_cast<std::size_t>( node_index ) );
     if( !node ) {
         return;
     }
@@ -351,12 +427,12 @@ void bsp_parser::ray_cast_brush(
         auto starts_out = false;
         auto ends_out = false;
         for( auto i = 0; i < brush->num_sides; ++i ) {
-            auto const* brush_side = &_brush_sides.at( brush->first_side + i );
+            auto const* brush_side = &brush_sides.at( brush->first_side + i );
             if( !brush_side || brush_side->bevel ) {
                 continue;
             }
 
-            auto const* plane = &_planes.at( brush_side->plane_num );
+            auto const* plane = &planes.at( brush_side->plane_num );
             if( !plane ) {
                 continue;
             }
@@ -440,11 +516,11 @@ void bsp_parser::ray_cast_surface(
 )
 {
     const auto index = static_cast<std::size_t>( surface_index );
-    if( index >= _polygons.size() ) {
+    if( index >= polygons.size() ) {
         return;
     }
 
-    auto* polygon   = &_polygons.at( index );
+    auto* polygon   = &polygons.at( index );
     auto* plane     = &polygon->plane;
     const auto dot1 = plane->dist( origin );
     const auto dot2 = plane->dist( destination );
@@ -484,7 +560,7 @@ bool bsp_parser::load_map(
     const std::string& map_name
 )
 {
-    if( map_name == _map_name ) {
+    if( map_name == this->map_name ) {
         return true;
     }
 
@@ -504,33 +580,209 @@ bool bsp_parser::load_map(
     }
 
     try {
-        file.read( reinterpret_cast<char*>( &_bsp_header ), sizeof( _bsp_header ) );
+        file.read( reinterpret_cast<char*>( &bsp_header ), sizeof( bsp_header ) );
     #if defined(RN_BSP_PARSER_MESSAGES)
         if( _bsp_header.m_Version < valve::BSPVERSION  ) {
             std::printf( "[!] unknown BSP version (%d), trying to parse it anyway...\n", _bsp_header.m_Version );
         }
     #endif
-        if( !valve::has_valid_bsp_ident( _bsp_header.ident ) ) {
+        if( !valve::has_valid_bsp_ident( bsp_header.ident ) ) {
     #if defined(RN_BSP_PARSER_MESSAGES)
             std::printf( "[!] %s isn't a (valid) .bsp file!\n", map_name.data() );
     #endif
             return false;
         }
 
-        return parse_lump( file, valve::lump_index::vertices, _vertices )
+        bool baseMapParsed =  parse_lump( file, valve::lump_index::vertices, vertices )
             && parse_planes( file )
-            && parse_lump( file, valve::lump_index::edges, _edges )
-            && parse_lump( file, valve::lump_index::surfedges, _surf_edges )
-            && parse_lump( file, valve::lump_index::leafs, _leaves )
+            && parse_lump( file, valve::lump_index::edges, edges )
+            && parse_lump( file, valve::lump_index::surfedges, surf_edges )
+            && parse_lump( file, valve::lump_index::leafs, leaves )
             && parse_nodes( file )
-            && parse_lump( file, valve::lump_index::faces, _surfaces )
-            && parse_lump( file, valve::lump_index::tex_info, _tex_infos )
-            && parse_lump( file, valve::lump_index::brushes, _brushes )
-            && parse_lump( file, valve::lump_index::brush_sides, _brush_sides )
+            && parse_lump( file, valve::lump_index::faces, surfaces )
+            && parse_lump( file, valve::lump_index::tex_info, tex_infos )
+            && parse_lump( file, valve::lump_index::brushes, brushes )
+            && parse_lump( file, valve::lump_index::brush_sides, brush_sides )
             && parse_leaffaces( file )
             && parse_leafbrushes( file )
+            && parse_entities(file)
             && parse_polygons()
         ;
+        if (!baseMapParsed)
+            return false;
+
+        // TODO add standalone lump files.
+
+        //first strip bsp and add lmp extension
+
+        std::string lmpFormattedPath = file_path.substr(0,file_path.size()-4); //remove .bsp
+
+
+        lmpFormattedPath.append("_l_");
+
+
+        for (int i=0;;i++){
+            std::string thisLmpFile = lmpFormattedPath + std::to_string(i)+".lmp";
+
+            std::ifstream file(thisLmpFile, std::ios_base::binary); // file of lumpPatch 0
+            if (!file.good()) {
+                break; // file likely not present. We're finished
+            }
+
+            //Alright. File present. Parse the header of the file.
+            rn::valve::lumpfileheader_t lumpFileHeader;
+
+
+
+            file.read( reinterpret_cast<char*>( &lumpFileHeader ), sizeof( lumpFileHeader ) );
+
+            bool surfacesInvalidated = false;
+            //Now that we have header ready we need to know which lump we're replacing
+            switch (static_cast<valve::lump_index>(lumpFileHeader.lumpID)) {
+
+            case valve::lump_index::entities: {
+                auto _oldLump = entities;
+                if (!parse_entities(file,std::make_optional(lumpFileHeader))) {
+                    entities = _oldLump;
+                }
+                break;
+            }
+            case valve::lump_index::vertices: {
+
+                auto _oldLump = std::vector(vertices);
+                if (!parse_lump(file,valve::lump_index::vertices,vertices),std::make_optional(lumpFileHeader)) {
+                    vertices = _oldLump;
+                }
+                break;
+                }
+
+            case valve::lump_index::planes: {
+
+
+                auto _oldLump = planes;
+                if (!parse_planes(file,std::make_optional(lumpFileHeader))) {
+                    planes = _oldLump;
+                }
+                    break;
+
+            }
+            case valve::lump_index::edges: {
+
+
+                auto _oldLump = edges;
+                if (!parse_lump(file,valve::lump_index::edges,edges),std::make_optional(lumpFileHeader)) {
+                    edges = _oldLump;
+                }
+                    break;
+
+            }
+            case valve::lump_index::surfedges: {
+
+
+                auto _oldLump = surf_edges;
+                if (!parse_lump(file,valve::lump_index::surfedges,surf_edges),std::make_optional(lumpFileHeader)) {
+                    surf_edges = _oldLump;
+                }
+                    break;
+
+            }
+            case valve::lump_index::leafs: {
+
+
+                auto _oldLump = leaves;
+                if (!parse_lump(file,valve::lump_index::leafs,leaves),std::make_optional(lumpFileHeader)) {
+                    leaves = _oldLump;
+                }
+                    break;
+
+            }
+            case valve::lump_index::nodes: {
+
+
+                auto _oldLump = nodes;
+                if (!parse_nodes(file,std::make_optional(lumpFileHeader))) {
+                    nodes = _oldLump;
+                }
+                    break;
+
+            }
+            case valve::lump_index::faces: {
+
+
+                auto _oldLump = surfaces;
+                if (!parse_lump(file,valve::lump_index::faces,surfaces),std::make_optional(lumpFileHeader)) {
+                    surfaces = _oldLump;
+                } else surfacesInvalidated = true;
+                    break;
+
+            }
+            case valve::lump_index::tex_info: {
+
+
+                auto _oldLump = tex_infos;
+                if (!parse_lump(file,valve::lump_index::tex_info,tex_infos),std::make_optional(lumpFileHeader)) {
+                    tex_infos = _oldLump;
+                }
+                    break;
+
+            }
+            case valve::lump_index::brushes: {
+
+
+                auto _oldLump = brushes;
+                if (!parse_lump(file,valve::lump_index::brushes,brushes),std::make_optional(lumpFileHeader)) {
+                    brushes = _oldLump;
+                }
+                    break;
+
+            }
+            case valve::lump_index::brush_sides: {
+
+
+                auto _oldLump = brush_sides;
+                if (!parse_lump(file,valve::lump_index::brush_sides,brush_sides),std::make_optional(lumpFileHeader)) {
+                    brush_sides = _oldLump;
+                }
+                    break;
+
+            }
+            case valve::lump_index::leaf_faces: {
+
+
+                auto _oldLump = leaf_faces;
+                if (!parse_leaffaces(file,std::make_optional(lumpFileHeader))) {
+                    leaf_faces = _oldLump;
+                }
+                    break;
+
+            }
+            case valve::lump_index::leaf_brushes: {
+
+
+                auto _oldLump = leaf_brushes;
+                if (!parse_leaffaces(file,std::make_optional(lumpFileHeader))) {
+                    leaf_brushes = _oldLump;
+                }
+                    break;
+
+            }
+            default:
+                break;
+            }
+
+
+
+
+
+            std::string nextLmpFile = lmpFormattedPath + std::to_string(i+1)+".lmp"; //Is next file lump present?
+            std::ifstream fileNext(nextLmpFile, std::ios_base::binary);
+            if (!fileNext.good()) {
+                break; // file likely not present. We're finished
+            }
+        }
+        parse_polygons();
+
+        return true;
     }
     catch( ... ) {
         return false;
@@ -556,7 +808,7 @@ void bsp_parser::trace_ray(
     valve::trace_t* out
 )
 {
-    if( !_planes.empty() && out ) {
+    if( !planes.empty() && out ) {
 
         out->clear();
         out->fraction = 1.0f;
