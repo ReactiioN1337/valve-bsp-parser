@@ -18,6 +18,9 @@
     <ClInclude Include="include\mkrn\core\requirements.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\mkrn\math\matrix.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\valve\bsp_parser.cpp">

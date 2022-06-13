@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\mkrn\core\requirements.hpp" />
+    <ClInclude Include="include\mkrn\math\matrix.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\valve\bsp_parser.cpp" />
