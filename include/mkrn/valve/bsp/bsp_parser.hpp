@@ -1,11 +1,11 @@
-﻿///--------------------------------------------------------------------------------
+﻿///---------------------------------------------------------------------------------------------------------------------
 ///-- Author        ReactiioN
-///-- Copyright     2016-2020, ReactiioN
+///-- Copyright     2016-2022, ReactiioN
 ///-- License       MIT
-///--------------------------------------------------------------------------------
+///---------------------------------------------------------------------------------------------------------------------
 #pragma once
 
-#include <valve-bsp-parser/core/valve_structs.hpp>
+#include <mkrn/valve/bsp/file-format/valve_structs.hpp>
 #include <shared_mutex>
 #include <LzmaLib.h>
 #include <cstring>
@@ -13,7 +13,7 @@
 #include <mutex>
 #include <optional>
 
-namespace rn {
+namespace mkrn::valve {
 class bsp_parser final
 {
 public:
@@ -47,26 +47,26 @@ private:
 
     bool parse_planes(
         std::ifstream& file,
-        std::optional<valve::lumpfileheader_t> lumpFileHeader
+        std::optional<bsp::lumpfileheader_t> lumpFileHeader
     );
     bool parse_entities(
         std::ifstream& file,
-        std::optional<valve::lumpfileheader_t> lumpFileHeader
+        std::optional<bsp::lumpfileheader_t> lumpFileHeader
     );
 
     bool parse_nodes(
         std::ifstream& file,
-        std::optional<valve::lumpfileheader_t> lumpFileHeader
+        std::optional<bsp::lumpfileheader_t> lumpFileHeader
     );
 
     bool parse_leaffaces(
         std::ifstream& file,
-        std::optional<valve::lumpfileheader_t> lumpFileHeader
+        std::optional<bsp::lumpfileheader_t> lumpFileHeader
     );
 
     bool parse_leafbrushes(
         std::ifstream& file,
-        std::optional<valve::lumpfileheader_t> lumpFileHeader
+        std::optional<bsp::lumpfileheader_t> lumpFileHeader
     ); 
     
     //bool parse_entities(
@@ -76,40 +76,40 @@ private:
     bool parse_polygons();
 
     void ray_cast_node(
-        std::int32_t    node_index,
-        float           start_fraction,
-        float           end_fraction,
-        const vector3&  origin,
-        const vector3&  destination,
-        valve::trace_t* out
+        std::int32_t         node_index,
+        float                start_fraction,
+        float                end_fraction,
+        const math::vector3& origin,
+        const math::vector3& destination,
+        bsp::trace_t*        out
     );
 
     void ray_cast_surface(
-        std::int32_t    surface_index,
-        const vector3&  origin,
-        const vector3&  destination,
-        valve::trace_t* out
+        std::int32_t         surface_index,
+        const math::vector3& origin,
+        const math::vector3& destination,
+        bsp::trace_t*        out
     );
 
     void ray_cast_brush(
-        valve::dbrush_t* brush,
-        const vector3&   origin,
-        const vector3&   destination,
-        valve::trace_t*  out
+        bsp::dbrush_t* brush,
+        const math::vector3&   origin,
+        const math::vector3&   destination,
+        bsp::trace_t*  out
     )const;
 
     template<typename type>
     NODISCARD
     bool parse_lump(
         std::ifstream&          file,
-        const valve::lump_index lump_index,
+        const bsp::lump_index lump_index,
         std::vector<type>&      out,
-        std::optional<valve::lumpfileheader_t> fileLump = std::nullopt
+        std::optional<bsp::lumpfileheader_t> fileLump = std::nullopt
     ) const
     {
-        using rn::valve::lzma_header_t;
-        using rn::valve::has_valid_lzma_ident;
-        const auto index = static_cast<std::underlying_type_t<valve::lump_index>>( lump_index );
+        using bsp::lzma_header_t;
+        using bsp::has_valid_lzma_ident;
+        const auto index = static_cast<std::underlying_type_t<bsp::lump_index>>( lump_index );
 
 
 
@@ -128,7 +128,7 @@ private:
 
         std::size_t lumpOffset,lumpSize;
 
-        valve::lumpfileheader_t lumpPatch;
+        bsp::lumpfileheader_t lumpPatch;
         if (fileLump.has_value()) {
                lumpPatch = fileLump.value();
                lumpOffset = lumpPatch.file_offset;
@@ -157,7 +157,7 @@ private:
 
         if (has_valid_lzma_ident(lzma_header.id))
         {
-            assert(lump_index != valve::lump_index::game_lump || lump_index != valve::lump_index::pak_file); //Those have special rules regarding compression.
+            assert(lump_index != bsp::lump_index::game_lump || lump_index != bsp::lump_index::pak_file); //Those have special rules regarding compression.
 
 
 
@@ -207,14 +207,14 @@ public:
     );
 
     bool is_visible(
-        const vector3& origin,
-        const vector3& destination
+        const math::vector3& origin,
+        const math::vector3& destination
     );
 
     void trace_ray(
-        const vector3&  origin,
-        const vector3&  final,
-        valve::trace_t* out
+        const math::vector3& origin,
+        const math::vector3& final,
+        bsp::trace_t*        out
     );
     void unload_map();
 
@@ -223,23 +223,23 @@ public:
 
     //TODO: Cannot remove leading underscores as some code relies on it.
 public:
-    std::string                      map_name;
-    valve::dheader_t                 bsp_header;
+    std::string                    map_name;
+    bsp::dheader_t                 bsp_header;
     //entities go here
-    std::vector<valve::mvertex_t>    vertices;
-    std::vector<valve::cplane_t>     planes;
-    std::vector<valve::dedge_t>      edges;
-    std::vector<std::int32_t>        surf_edges;
-    std::vector<valve::dleaf_t>      leaves;
-    std::vector<valve::snode_t>      nodes;
-    std::vector<valve::dface_t>      surfaces;
-    std::vector<valve::texinfo_t>    tex_infos;
-    std::vector<valve::dbrush_t>     brushes;
-    std::vector<valve::dbrushside_t> brush_sides;
-    std::vector<std::uint16_t>       leaf_faces;
-    std::vector<std::uint16_t>       leaf_brushes;
-    std::vector<valve::polygon>      polygons;
-    std::vector<valve::entity_t>     entities;
+    std::vector<bsp::mvertex_t>    vertices;
+    std::vector<bsp::cplane_t>     planes;
+    std::vector<bsp::dedge_t>      edges;
+    std::vector<std::int32_t>      surf_edges;
+    std::vector<bsp::dleaf_t>      leaves;
+    std::vector<bsp::snode_t>      nodes;
+    std::vector<bsp::dface_t>      surfaces;
+    std::vector<bsp::texinfo_t>    tex_infos;
+    std::vector<bsp::dbrush_t>     brushes;
+    std::vector<bsp::dbrushside_t> brush_sides;
+    std::vector<std::uint16_t>     leaf_faces;
+    std::vector<std::uint16_t>     leaf_brushes;
+    std::vector<bsp::polygon>      polygons;
+    std::vector<bsp::entity_t>     entities;
 private:
     mutable std::shared_timed_mutex  _mutex;
 };
