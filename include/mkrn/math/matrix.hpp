@@ -605,6 +605,21 @@ public:
         return ret;
     }
 
+    NODISCARD
+    auto
+    identity() noexcept -> matrix_t&
+    {
+        static_assert(NumRows == 4 && NumCols == 4);
+
+        fill(0.f);
+
+        for (std::size_t i{}; i < 4; ++i) {
+            at(i, i) = 1.f;
+        }
+
+        return *this;
+    }
+
 private:
     type_array data_{};
 };
