@@ -8,6 +8,8 @@
 #include <mkrn/core/requirements.hpp>
 
 namespace mkrn::math {
+constexpr inline auto dist_epsilon{ 0.03125f };
+;
 template<std::size_t NumRows, std::size_t NumCols>
 class matrix_t
 {
