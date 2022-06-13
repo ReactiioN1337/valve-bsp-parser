@@ -1,13 +1,15 @@
-//--------------------------------------------------------------------------------
-//-- Author        ReactiioN
-//-- Copyright     2016-2020, ReactiioN
-//-- License       MIT
-//--------------------------------------------------------------------------------
+///---------------------------------------------------------------------------------------------------------------------
+///-- Author        ReactiioN
+///-- Copyright     2016-2022, ReactiioN
+///-- License       MIT
+///---------------------------------------------------------------------------------------------------------------------
 #pragma once
 
-#include <valve-bsp-parser/core/matrix.hpp>
+#include <unordered_map>
+#include <mkrn/math/matrix.hpp>
+#include <mkrn/valve/bsp/file-format/constants.hpp>
 
-namespace rn::valve {
+namespace mkrn::valve::bsp {
 constexpr bool has_valid_bsp_ident(
     const std::int32_t ident
 )
@@ -15,112 +17,6 @@ constexpr bool has_valid_bsp_ident(
     //Why the check was >= instead of == I'll never know
     return ident == ( 'P' << 24 ) + ( 'S' << 16 ) + ( 'B' << 8 ) + 'V';
 }
-
-constexpr std::int32_t MAX_BRUSH_LIGHTMAP_DIM_WITHOUT_BORDER   = 32;
-constexpr std::int32_t MAX_BRUSH_LIGHTMAP_DIM_INCLUDING_BORDER = 35;
-constexpr std::int32_t MAX_DISP_LIGHTMAP_DIM_WITHOUT_BORDER    = 128;
-constexpr std::int32_t MAX_DISP_LIGHTMAP_DIM_INCLUDING_BORDER  = 131;
-constexpr std::int32_t MAX_LIGHTMAP_DIM_WITHOUT_BORDER         = MAX_DISP_LIGHTMAP_DIM_WITHOUT_BORDER;
-constexpr std::int32_t MAX_LIGHTMAP_DIM_INCLUDING_BORDER       = MAX_DISP_LIGHTMAP_DIM_INCLUDING_BORDER;
-
-constexpr float        DIST_EPSILON              = 0.03125f;
-constexpr std::size_t  MAX_SURFINFO_VERTS        = 32;
-constexpr std::int32_t BSPVERSION                = 19;
-constexpr std::size_t  HEADER_LUMPS              = 64;
-constexpr std::size_t  MAX_POLYGONS              = 50120;
-constexpr std::size_t  MAX_MOD_KNOWN             = 512;
-constexpr std::size_t  MAX_MAP_MODELS            = 1024;
-constexpr std::size_t  MAX_MAP_BRUSHES           = 8192;
-constexpr std::size_t  MAX_MAP_ENTITIES          = 4096;
-constexpr std::size_t  MAX_MAP_ENTSTRING         = 256 * 1024;
-constexpr std::size_t  MAX_MAP_NODES             = 65536;
-constexpr std::size_t  MAX_MAP_TEXINFO           = 12288;
-constexpr std::size_t  MAX_MAP_TEXDATA           = 2048;
-constexpr std::size_t  MAX_MAP_LEAFBRUSHES       = 65536;
-constexpr std::size_t  MIN_MAP_DISP_POWER        = 2;
-constexpr std::size_t  MAX_MAP_DISP_POWER        = 4;
-constexpr std::size_t  MAX_MAP_SURFEDGES         = 512000;
-constexpr std::size_t  MAX_DISP_CORNER_NEIGHBORS = 4;
-
-// NOTE: These are stored in a short in the engine now.  Don't use more than 16 bits
-constexpr std::int32_t SURF_LIGHT     = 0x0001; // value will hold the light strength
-constexpr std::int32_t SURF_SLICK     = 0x0002; // effects game physics
-constexpr std::int32_t SURF_SKY       = 0x0004; // don't draw, but add to skybox
-constexpr std::int32_t SURF_WARP      = 0x0008; // turbulent water warp
-constexpr std::int32_t SURF_TRANS     = 0x0010;
-constexpr std::int32_t SURF_WET       = 0x0020; // the surface is wet
-constexpr std::int32_t SURF_FLOWING   = 0x0040; // scroll towards angle
-constexpr std::int32_t SURF_NODRAW    = 0x0080; // don't bother referencing the texture
-constexpr std::int32_t SURF_Hint32_t  = 0x0100; // make a primary bsp splitter
-constexpr std::int32_t SURF_SKIP      = 0x0200; // completely ignore, allowing non-closed brushes
-constexpr std::int32_t SURF_NOLIGHT   = 0x0400; // Don't calculate light
-constexpr std::int32_t SURF_BUMPLIGHT = 0x0800; // calculate three lightmaps for the surface for bumpmapping
-constexpr std::int32_t SURF_HITBOX    = 0x8000; // surface is part of a hitbox
-
-constexpr std::int32_t CONTENTS_EMPTY         = 0;           // No contents
-constexpr std::int32_t CONTENTS_SOLID         = 0x1;         // an eye is never valid in a solid
-constexpr std::int32_t CONTENTS_WINDOW        = 0x2;         // translucent, but not watery (glass)
-constexpr std::int32_t CONTENTS_AUX           = 0x4;
-constexpr std::int32_t CONTENTS_GRATE         = 0x8;         // alpha-tested "grate" textures.  Bullets/sight pass through, but solids don't
-constexpr std::int32_t CONTENTS_SLIME         = 0x10;
-constexpr std::int32_t CONTENTS_WATER         = 0x20;
-constexpr std::int32_t CONTENTS_MIST          = 0x40;
-constexpr std::int32_t CONTENTS_OPAQUE        = 0x80;        // things that cannot be seen through (may be non-solid though)
-constexpr std::int32_t LAST_VISIBLE_CONTENTS  = 0x80;
-constexpr std::int32_t ALL_VISIBLE_CONTENTS   = LAST_VISIBLE_CONTENTS | LAST_VISIBLE_CONTENTS - 1;
-constexpr std::int32_t CONTENTS_TESTFOGVOLUME = 0x100;
-constexpr std::int32_t CONTENTS_UNUSED3       = 0x200;
-constexpr std::int32_t CONTENTS_UNUSED4       = 0x400;
-constexpr std::int32_t CONTENTS_UNUSED5       = 0x800;
-constexpr std::int32_t CONTENTS_UNUSED6       = 0x1000;
-constexpr std::int32_t CONTENTS_UNUSED7       = 0x2000;
-constexpr std::int32_t CONTENTS_MOVEABLE      = 0x4000;      // hits entities which are MOVETYPE_PUSH (doors, plats, etc.)
-// remaining contents are non-visible, and don't eat brushes
-constexpr std::int32_t CONTENTS_AREAPORTAL    = 0x8000;
-constexpr std::int32_t CONTENTS_PLAYERCLIP    = 0x10000;
-constexpr std::int32_t CONTENTS_MONSTERCLIP   = 0x20000;
-// currents can be added to any other contents, and may be mixed
-constexpr std::int32_t CONTENTS_CURRENT_0     = 0x40000;
-constexpr std::int32_t CONTENTS_CURRENT_90    = 0x80000;
-constexpr std::int32_t CONTENTS_CURRENT_180   = 0x100000;
-constexpr std::int32_t CONTENTS_CURRENT_270   = 0x200000;
-constexpr std::int32_t CONTENTS_CURRENT_UP    = 0x400000;
-constexpr std::int32_t CONTENTS_CURRENT_DOWN  = 0x800000;
-constexpr std::int32_t CONTENTS_ORIGIN        = 0x1000000;   // removed before bsping an entity
-constexpr std::int32_t CONTENTS_MONSTER       = 0x2000000;   // should never be on a brush, only in game
-constexpr std::int32_t CONTENTS_DEBRIS        = 0x4000000;
-constexpr std::int32_t CONTENTS_DETAIL        = 0x8000000;   // brushes to be added after vis leafs
-constexpr std::int32_t CONTENTS_TRANSLUCENT   = 0x10000000;  // int32_t set if any surface has trans
-constexpr std::int32_t CONTENTS_LADDER        = 0x20000000;
-constexpr std::int32_t CONTENTS_HITBOX        = 0x40000000;  // use accurate hitboxes on trace
-
-// everyhting
-constexpr std::int32_t MASK_ALL                   = 0xFFFFFFFF;
-// everything that is normally solid
-constexpr std::int32_t MASK_SOLID                 = CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_WINDOW | CONTENTS_MONSTER | CONTENTS_GRATE;
-// everything that blocks player movement
-constexpr std::int32_t MASK_PLAYERSOLID           = CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_PLAYERCLIP | CONTENTS_WINDOW | CONTENTS_MONSTER | CONTENTS_GRATE;
-// blocks npc movement
-constexpr std::int32_t MASK_NPCSOLID              = CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MONSTERCLIP | CONTENTS_WINDOW | CONTENTS_MONSTER | CONTENTS_GRATE;
-// water physics in these contents
-constexpr std::int32_t MASK_WATER                 = CONTENTS_WATER | CONTENTS_MOVEABLE | CONTENTS_SLIME;
-// everything that blocks line of sight
-constexpr std::int32_t MASK_OPAQUE                = CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_SLIME | CONTENTS_OPAQUE;
-// bullets see these as solid
-constexpr std::int32_t MASK_SHOT                  = CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MONSTER | CONTENTS_WINDOW | CONTENTS_DEBRIS | CONTENTS_HITBOX;
-// non-raycasted weapons see this as solid (includes grates)
-constexpr std::int32_t MASK_SHOT_HULL             = CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MONSTER | CONTENTS_WINDOW | CONTENTS_DEBRIS | CONTENTS_GRATE;
-// everything normally solid, except monsters (world+brush only)
-constexpr std::int32_t MASK_SOLID_BRUSHONLY       = CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_WINDOW | CONTENTS_GRATE;
-// everything normally solid for player movement, except monsters (world+brush only)
-constexpr std::int32_t MASK_PLAYERSOLID_BRUSHONLY = CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_WINDOW | CONTENTS_PLAYERCLIP | CONTENTS_GRATE;
-// everything normally solid for npc movement, except monsters (world+brush only)
-constexpr std::int32_t MASK_NPCSOLID_BRUSHONLY    = CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_WINDOW | CONTENTS_MONSTERCLIP | CONTENTS_GRATE;
-// just the world, used for route rebuilding
-constexpr std::int32_t MASK_NPCWORLDSTATIC        = CONTENTS_SOLID | CONTENTS_WINDOW | CONTENTS_MONSTERCLIP | CONTENTS_GRATE;
-// UNDONE: This is untested, any moving water
-constexpr std::int32_t MASK_CURRENT               = CONTENTS_CURRENT_0 | CONTENTS_CURRENT_90 | CONTENTS_CURRENT_180 | CONTENTS_CURRENT_270 | CONTENTS_CURRENT_UP | CONTENTS_CURRENT_DOWN;
-constexpr std::int32_t MASK_DEADSOLID             = CONTENTS_SOLID | CONTENTS_PLAYERCLIP | CONTENTS_WINDOW | CONTENTS_GRATE;
 
 enum class lump_index
     : std::size_t
@@ -215,7 +111,7 @@ public:
 
 class dheader_t
 {
-    using type_lumps = std::array<lump_t, HEADER_LUMPS>;
+    using type_lumps = std::array<lump_t, max_header_lumps>;
 
 public:
     std::int32_t ident        = 0; // 0x000
@@ -228,20 +124,20 @@ public:
 class dplane_t
 {
 public:
-    vector3      normal;   // 0x00
-    float        distance; // 0x0C
-    std::int32_t type;     // 0x10
+    math::vector3 normal;   // 0x00
+    float         distance; // 0x0C
+    std::int32_t  type;     // 0x10
 };//Size=0x14
 
 class cplane_t
 {
 public:
-    vector3      normal;            // 0x00
-    float        distance;          // 0x0C
-    std::uint8_t type;              // 0x10
-    std::uint8_t sign_bits;         // 0x11
+    math::vector3 normal;            // 0x00
+    float         distance;          // 0x0C
+    std::uint8_t  type;              // 0x10
+    std::uint8_t  sign_bits;         // 0x11
 private:
-    std::uint8_t _pad0x12[ 0x2 ]{}; // 0x12
+    std::uint8_t  _pad0x12[ 0x2 ]{}; // 0x12
 };//Size=0x14
 
 
@@ -261,7 +157,7 @@ public:
 class mvertex_t
 {
 public:
-    vector3 position; // 0x0
+    math::vector3 position; // 0x0
 };//Size=0xC
 
 class dleaf_t
@@ -380,7 +276,7 @@ public:
 
 class texinfo_t
 {
-    using type_vecs = std::array<vector4, 2>;
+    using type_vecs = std::array<math::vector4, 2>;
 
 public:
     type_vecs    texture_vecs;  // 0x00
@@ -395,8 +291,8 @@ public:
     VPlane() = default;
 
     VPlane(
-        const vector3& origin,
-        const float distance
+        const math::vector3& origin,
+        const float          distance
     )
         : origin( origin )
         , distance( distance )
@@ -431,15 +327,15 @@ public:
 
     NODISCARD
     float dist(
-        const vector3& destination
+        const math::vector3& destination
     ) const
     {
         return origin.dot( destination ) - distance;
     }
 
     void init(
-        const vector3& origin,
-        const float distance
+        const math::vector3& origin,
+        const float          distance
     )
     {
         this->origin   = origin;
@@ -447,14 +343,14 @@ public:
     }
 
 public:
-    vector3 origin   = 0.f;
-    float   distance = 0.f;
+    math::vector3 origin   = 0.f;
+    float         distance = 0.f;
 };
 
 class polygon
 {
-    using type_surfinfo_vecs = std::array<vector3, MAX_SURFINFO_VERTS>;
-    using type_edge_planes   = std::array<VPlane, MAX_SURFINFO_VERTS>;
+    using type_surfinfo_vecs = std::array<math::vector3, max_surfinfo_verts>;
+    using type_edge_planes   = std::array<VPlane, max_surfinfo_verts>;
 
 public:
     type_surfinfo_vecs verts;
@@ -470,23 +366,23 @@ struct trace_t
     /// <summary>
     /// Determine if a plan is NOT valid
     /// </summary>
-    bool         all_solid           = true;
+    bool          all_solid           = true;
     /// <summary>
     /// Determine if the start point was in a solid area
     /// </summary>
-    bool         start_solid         = true;
+    bool          start_solid         = true;
     /// <summary>
     /// Time completed, 1.0              = didn't hit anything
     /// </summary>
-    float        fraction            = 1.f;
-    float        fraction_left_solid = 1.f;
+    float         fraction            = 1.f;
+    float         fraction_left_solid = 1.f;
     /// <summary>
     /// Final trace position
     /// </summary>
-    vector3      end_pos;
-    std::int32_t contents            = 0;
-    dbrush_t*    brush               = nullptr;
-    std::int32_t num_brush_sides     = 0;
+    math::vector3 end_pos;
+    std::int32_t  contents            = 0;
+    dbrush_t*     brush               = nullptr;
+    std::int32_t  num_brush_sides     = 0;
 
     void clear()
     {

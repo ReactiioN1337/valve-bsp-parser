@@ -15,45 +15,19 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\bsp_parser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="thirdparty\liblzma\src\win\LzFindMt.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="thirdparty\liblzma\src\win\LzmaLibExports.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="thirdparty\liblzma\src\win\Threads.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="thirdparty\liblzma\src\Alloc.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="thirdparty\liblzma\src\LzFind.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="thirdparty\liblzma\src\LzmaDec.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="thirdparty\liblzma\src\LzmaEnc.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="thirdparty\liblzma\src\LzmaLib.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="include\valve-bsp-parser\core\requirements.hpp">
+    <ClInclude Include="include\mkrn\core\requirements.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\valve-bsp-parser\core\matrix.hpp">
+    <ClInclude Include="include\mkrn\math\matrix.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\valve-bsp-parser\bsp_parser.hpp">
+    <ClInclude Include="include\mkrn\valve\bsp\file-format\constants.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\valve-bsp-parser\core\valve_structs.hpp">
+    <ClInclude Include="include\mkrn\valve\bsp\file-format\valve_structs.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mkrn\valve\bsp\bsp_parser.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="thirdparty\liblzma\include\win\LzFindMt.h">
@@ -92,6 +66,35 @@
     <ClInclude Include="thirdparty\liblzma\src\win\7zVersion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\valve\bsp_parser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\liblzma\src\win\LzFindMt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\liblzma\src\win\LzmaLibExports.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\liblzma\src\win\Threads.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\liblzma\src\Alloc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\liblzma\src\LzFind.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\liblzma\src\LzmaDec.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\liblzma\src\LzmaEnc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\liblzma\src\LzmaLib.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="thirdparty\liblzma\src\win\7zVersion.rc">
