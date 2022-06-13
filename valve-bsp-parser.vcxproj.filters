@@ -66,6 +66,66 @@
     <ClInclude Include="thirdparty\liblzma\src\win\7zVersion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\mkrn\valve\bsp\file-format\color_rgb_exp32.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mkrn\valve\bsp\file-format\compressed_light_cube.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mkrn\valve\bsp\file-format\cplane.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mkrn\valve\bsp\file-format\dbrush.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mkrn\valve\bsp\file-format\dbrushside.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mkrn\valve\bsp\file-format\dedge.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mkrn\valve\bsp\file-format\dface.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mkrn\valve\bsp\file-format\dheader.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mkrn\valve\bsp\file-format\dleaf.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mkrn\valve\bsp\file-format\dnode.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mkrn\valve\bsp\file-format\dplane.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mkrn\valve\bsp\file-format\entity.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mkrn\valve\bsp\file-format\lump.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mkrn\valve\bsp\file-format\lzma.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mkrn\valve\bsp\file-format\polygon.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mkrn\valve\bsp\file-format\snode.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mkrn\valve\bsp\file-format\texinfo.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mkrn\valve\bsp\file-format\vertex.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mkrn\valve\bsp\file-format\vplane.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mkrn\valve\bsp\file-format\trace.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\valve\bsp_parser.cpp">
