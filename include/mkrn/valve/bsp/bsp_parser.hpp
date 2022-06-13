@@ -5,7 +5,23 @@
 ///---------------------------------------------------------------------------------------------------------------------
 #pragma once
 
-#include <mkrn/valve/bsp/file-format/valve_structs.hpp>
+#include <mkrn/valve/bsp/file-format/cplane.hpp>
+#include <mkrn/valve/bsp/file-format/dbrush.hpp>
+#include <mkrn/valve/bsp/file-format/dbrushside.hpp>
+#include <mkrn/valve/bsp/file-format/dedge.hpp>
+#include <mkrn/valve/bsp/file-format/dface.hpp>
+#include <mkrn/valve/bsp/file-format/dheader.hpp>
+#include <mkrn/valve/bsp/file-format/dleaf.hpp>
+#include <mkrn/valve/bsp/file-format/dnode.hpp>
+#include <mkrn/valve/bsp/file-format/dplane.hpp>
+#include <mkrn/valve/bsp/file-format/entity.hpp>
+#include <mkrn/valve/bsp/file-format/lzma.hpp>
+#include <mkrn/valve/bsp/file-format/polygon.hpp>
+#include <mkrn/valve/bsp/file-format/snode.hpp>
+#include <mkrn/valve/bsp/file-format/texinfo.hpp>
+#include <mkrn/valve/bsp/file-format/trace.hpp>
+#include <mkrn/valve/bsp/file-format/vertex.hpp>
+#include <mkrn/valve/bsp/file-format/vplane.hpp>
 #include <shared_mutex>
 #include <LzmaLib.h>
 #include <cstring>
@@ -47,26 +63,26 @@ private:
 
     bool parse_planes(
         std::ifstream& file,
-        std::optional<bsp::lumpfileheader_t> lumpFileHeader
+        std::optional<bsp::lump_t::header> lumpFileHeader
     );
     bool parse_entities(
         std::ifstream& file,
-        std::optional<bsp::lumpfileheader_t> lumpFileHeader
+        std::optional<bsp::lump_t::header> lumpFileHeader
     );
 
     bool parse_nodes(
         std::ifstream& file,
-        std::optional<bsp::lumpfileheader_t> lumpFileHeader
+        std::optional<bsp::lump_t::header> lumpFileHeader
     );
 
     bool parse_leaffaces(
         std::ifstream& file,
-        std::optional<bsp::lumpfileheader_t> lumpFileHeader
+        std::optional<bsp::lump_t::header> lumpFileHeader
     );
 
     bool parse_leafbrushes(
         std::ifstream& file,
-        std::optional<bsp::lumpfileheader_t> lumpFileHeader
+        std::optional<bsp::lump_t::header> lumpFileHeader
     ); 
     
     //bool parse_entities(
@@ -102,20 +118,19 @@ private:
     NODISCARD
     bool parse_lump(
         std::ifstream&          file,
-        const bsp::lump_index lump_index,
+        const bsp::lump_t::id   lump_index,
         std::vector<type>&      out,
-        std::optional<bsp::lumpfileheader_t> fileLump = std::nullopt
+        std::optional<bsp::lump_t::header> fileLump = std::nullopt
     ) const
     {
         using bsp::lzma_header_t;
-        using bsp::has_valid_lzma_ident;
-        const auto index = static_cast<std::underlying_type_t<bsp::lump_index>>( lump_index );
+        const auto index = core::enum_v(lump_index);
 
 
-
-        if( index >= bsp_header.lumps.size() ) {
+        if (index >= core::enum_v(bsp::lump_t::id::last_index)) {
             return false;
         }
+
         //TODO: decompress lump here if compressed
         //Default behavior is casting data to underlying types.
         //It doesn't handle compression
@@ -124,11 +139,11 @@ private:
         //There are two exceptions though: Game lumps (35) (yes, multiple; compressed individually), and PAK Lump (40) (basically a zip file)
 
 
-        const auto& lump = bsp_header.lumps.at( index );
+        const auto& lump = bsp_header.lumps[index];
 
         std::size_t lumpOffset,lumpSize;
 
-        bsp::lumpfileheader_t lumpPatch;
+        bsp::lump_t::header lumpPatch;
         if (fileLump.has_value()) {
                lumpPatch = fileLump.value();
                lumpOffset = lumpPatch.file_offset;
@@ -143,7 +158,7 @@ private:
         //out.resize( size );
 
 
-        char* tmpData = new char[lumpSize + sizeof(lzma_header_t) + 1]; //lump.file_size doesn't count size of the header
+        char* tmpData = new char[lumpSize + sizeof(bsp::lzma_header_t) + 1]; //lump.file_size doesn't count size of the header
         file.seekg( lumpOffset );
         //Temporarily make this array. This data may be compressed.
         
@@ -154,10 +169,9 @@ private:
         lzma_header_t lzma_header;
         memcpy(&lzma_header, tmpData, sizeof(lzma_header));
 
-
-        if (has_valid_lzma_ident(lzma_header.id))
-        {
-            assert(lump_index != bsp::lump_index::game_lump || lump_index != bsp::lump_index::pak_file); //Those have special rules regarding compression.
+        
+        if (lzma_header.valid()) {
+            assert(lump_index != bsp::lump_t::id::game_lump || lump_index != bsp::lump_t::id::pak_file); //Those have special rules regarding compression.
 
 
 
@@ -169,19 +183,19 @@ private:
             //bool isCompressed = false;
 
            
-            tmpUncompressedData = new char[lzma_header.actualSize + 1];
+            tmpUncompressedData = new char[lzma_header.actual_size + 1];
 
 
-            size_t lzmaSize = lzma_header.lzmaSize,realSize = lzma_header.actualSize;
+            size_t lzmaSize = lzma_header.lzma_size,realSize = lzma_header.actual_size;
 
 
             LzmaUncompress(reinterpret_cast<unsigned char*>(tmpUncompressedData),
                            &realSize,
                            reinterpret_cast<unsigned char*>(tmpData+sizeof(lzma_header_t)), //point to actual data, not the header
                            &lzmaSize,
-                           reinterpret_cast<unsigned char*>(lzma_header.properties.data()),
+                           lzma_header.properties,
                            LZMA_PROPS_SIZE);
-            out.resize(static_cast<std::size_t>(lzma_header.actualSize) / sizeof(type));
+            out.resize(static_cast<std::size_t>(lzma_header.actual_size) / sizeof(type));
             out.assign(reinterpret_cast<type*>(tmpUncompressedData),reinterpret_cast<type*>(tmpUncompressedData+realSize));
             delete[] tmpUncompressedData;
 
@@ -226,7 +240,7 @@ public:
     std::string                    map_name;
     bsp::dheader_t                 bsp_header;
     //entities go here
-    std::vector<bsp::mvertex_t>    vertices;
+    std::vector<bsp::vertex_t>     vertices;
     std::vector<bsp::cplane_t>     planes;
     std::vector<bsp::dedge_t>      edges;
     std::vector<std::int32_t>      surf_edges;
