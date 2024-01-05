@@ -311,6 +311,8 @@ void bsp_parser::ray_cast_node(
         auto* leaf = &leaves.at( static_cast<std::size_t>( -node_index - 1 ) );
         for( std::uint16_t i = 0; i < leaf->num_leafbrushes; ++i ) {
 
+            if (leaf->first_leafbrush + i > leaf_brushes.size())
+                break;
             const auto brush_index = static_cast<std::int32_t>( leaf_brushes.at( leaf->first_leafbrush + i ) );
             auto* brush            = &brushes.at( brush_index );
             if( !brush || !( brush->contents & valve::MASK_SHOT_HULL ) ) {
